@@ -1,0 +1,15 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+Paul_docs
+JS_docs
+
+# Ignore this file because of the size limit of GitHub
+
+Analyses/Inputs/001_Raw_data/reads.txt
+
+Analyses/Inputs/002_Processed/whole/reads_whole.txt
+
+Analyses/Inputs
+Analyses/Outputs
