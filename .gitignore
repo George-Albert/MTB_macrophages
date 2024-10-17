@@ -1,0 +1,16 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+# Ignorar carpetas
+Paul_input_organized/
+JS_docs/
+
+# Ignorar archivos específicos en subdirectorios
+Analyses/Inputs/001_Raw_data/reads.txt
+Analyses/Inputs/002_Processed/whole/reads_whole.txt
+
+# Ignorar carpetas completas
+Analyses/Inputs/
+Analyses/Outputs/
