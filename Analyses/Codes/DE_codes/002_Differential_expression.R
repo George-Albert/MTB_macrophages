@@ -79,7 +79,7 @@ length(which(paste0(cols$Individual,"_",cols$Setup)!=rownames(cols)))
         fit2 <- eBayes(fit2)
         
         # SE <- as.data.frame(fit$stdev.unscaled*fit$sigma)
-        tab=data.frame(beta=fit2$coefficients,p=fit2$p.value,SE=fit2$stdev.unscaled*fit2$sigma)
+        tab=data.frame(beta=fit2$coefficients,p=fit2$p.value,SE=fit2$stdev.unscaled*fit2$sigma,t=fit2$t)
         #tab$fdr=qvalue(tab$p)$qvalues
         tab$fdr=p.adjust(tab$p,method="BH")
         tab$hit=0
