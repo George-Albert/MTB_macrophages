@@ -150,7 +150,7 @@ cluster_dir <- file.path(output_dir,"004_Clustering_plots")
   ### Run kmeans for kmax number of clusters
   for (number_clusters in vec) {
     
-    kmenas_res[[number_clusters]] <- kmeans(tab[, 1:4], centers=number_clusters,
+    kmeans_res[[number_clusters]] <- kmeans(tab[, 1:4], centers=number_clusters,
                                             iter.max = 100, 
                                             nstart = number_clusters)
     cluster_list[[number_clusters]] <-kmenas_res[[number_clusters]]$cluster
@@ -164,31 +164,31 @@ cluster_dir <- file.path(output_dir,"004_Clustering_plots")
                           kmeans_cluster_16k=kmenas_res[[16]]$cluster)
   
   ### Check the size of the cluster partitions
-  kmenas_res[[6]]$size
+  kmeans_res[[6]]$size
   # 482  374   53 1667 2128  187
-  kmenas_res[[12]]$size
+  kmeans_res[[12]]$size
   # 303  140 1273   39   74  566  233  319 1005   72    6  861
-  kmenas_res[[16]]$size
+  kmeans_res[[16]]$size
   # 133  74 513 184  39 646 244 255   6  42 872 115 214 247 742 565
   
   
   
   ### PCA for k=6
-  fviz_cluster(kmenas_res[[6]], norm_betas,stand = F,axes = c(1,2),geom="point",
+  fviz_cluster(kmeans_res[[6]], norm_betas,stand = F,axes = c(1,2),geom="point",
                ellipse.alpha = 0.1,ellipse.type = "norm",ggtheme = theme_classic())
   ### Hierarchical clustering on the random dataset
   fviz_dend(hclust(dist(norm_betas)), k = 6, k_colors = "jco",
             as.ggplot = TRUE, show_labels = FALSE)
   
   ### PCA for k=12
-  fviz_cluster(kmenas_res[[12]], norm_betas,stand = F,axes = c(1,2),geom="point",
+  fviz_cluster(kmeans_res[[12]], norm_betas,stand = F,axes = c(1,2),geom="point",
                ellipse.alpha = 0.1,ellipse.type = "norm",ggtheme = theme_classic()) 
   ### Hierarchical clustering on the random dataset
   fviz_dend(hclust(dist(norm_betas)), k = 12, k_colors = "jco",
             as.ggplot = TRUE, show_labels = FALSE)
  
   ### PCA for k=16
-  fviz_cluster(kmenas_res[[16]], norm_betas,stand = F,axes = c(1,2),geom="point",
+  fviz_cluster(kmeans_res[[16]], norm_betas,stand = F,axes = c(1,2),geom="point",
                ellipse.alpha = 0.1,ellipse.type = "norm",ggtheme = theme_classic()) 
   ### Hierarchical clustering on the random dataset
   fviz_dend(hclust(dist(norm_betas)), k = 16, k_colors = "jco",
