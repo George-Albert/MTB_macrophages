@@ -24,7 +24,7 @@
   library(ComplexHeatmap)
   ### Clustering packages
   # library(RCKS)
-  library(M3C)
+  # library(M3C)
   library(ConsensusClusterPlus)
   library(factoextra)
   library(NbClust)
@@ -142,10 +142,12 @@ cluster_dir <- file.path(output_dir,"004_Clustering_plots")
                              plot="pdf")
   
   ### Create a list to save the kmeans results
-  kmenas_res <- list()
+  kmeans_res <- list()
   cluster_list <- list()
   ### vector to loop
   vec <- seq(kmax)
+  
+  set.seed(12345)
   
   ### Run kmeans for kmax number of clusters
   for (number_clusters in vec) {
@@ -153,25 +155,23 @@ cluster_dir <- file.path(output_dir,"004_Clustering_plots")
     kmeans_res[[number_clusters]] <- kmeans(tab[, 1:4], centers=number_clusters,
                                             iter.max = 100, 
                                             nstart = number_clusters)
-    cluster_list[[number_clusters]] <-kmenas_res[[number_clusters]]$cluster
+    cluster_list[[number_clusters]] <-kmeans_res[[number_clusters]]$cluster
     
   }
   ### check the order of the gene names in each data
-  length(which(rownames(norm_betas) != names(kmenas_res[[6]]$cluster)))
+  length(which(rownames(norm_betas) != names(kmeans_res[[6]]$cluster)))
   
-  kmeans_data <- data.frame(norm_betas,kmeans_cluster_6k=kmenas_res[[6]]$cluster,
-                          kmeans_cluster_12k=kmenas_res[[12]]$cluster,
-                          kmeans_cluster_16k=kmenas_res[[16]]$cluster)
+  kmeans_data <- data.frame(norm_betas,kmeans_cluster_6k=kmeans_res[[6]]$cluster,
+                          kmeans_cluster_12k=kmeans_res[[12]]$cluster,
+                          kmeans_cluster_16k=kmeans_res[[16]]$cluster)
   
   ### Check the size of the cluster partitions
   kmeans_res[[6]]$size
   # 482  374   53 1667 2128  187
   kmeans_res[[12]]$size
-  # 303  140 1273   39   74  566  233  319 1005   72    6  861
+  # [1]   72  319 1005  303  233  140    6   39  566  861   74 1273
   kmeans_res[[16]]$size
   # 133  74 513 184  39 646 244 255   6  42 872 115 214 247 742 565
-  
-  
   
   ### PCA for k=6
   fviz_cluster(kmeans_res[[6]], norm_betas,stand = F,axes = c(1,2),geom="point",
@@ -206,11 +206,52 @@ cluster_dir <- file.path(output_dir,"004_Clustering_plots")
   # a clusterable data.
  
   ###Compute Hopkins statistic for log fold changes
-  set.seed(123)
+  # set.seed(12345)
   hopkins(norm_betas, n = nrow(norm_betas)-1)
+  
+  # About 0.09 tho, is clusterizable
   
   fviz_dist(dist(norm_betas), show_labels = FALSE)+
     labs(title = "TB infection over time (DM)")
+  
+  #####################################
+  ## Hierarchichal k-means algorithm ##
+  #####################################
+ 
+  hckmeans_res <- hkmeans(norm_betas,k=6)
+  hckmeans_res
+  
+  # Visualize the tree
+  fviz_dend(hckmeans_res, cex = 0.6, palette = "jco",
+            rect = TRUE, rect_border = "jco", rect_fill = TRUE)
+  
+  # Visualize the hkmeans final clusters
+  fviz_cluster(res.hk, palette = "jco", repel = TRUE,
+               ggtheme = theme_classic())
+  
+  #################################
+  ## Mclust clustering algorithm ##
+  #################################
+  
+  mc <- Mclust(df) # Model-based-clustering
+  summary(mc) # Print a summary
+  
+  mc$modelName # Optimal selected model ==> "VVV"
+  mc$G # Optimal number of cluster => 3
+  head(mc$z, 30) # Probality to belong to a given cluster
+  head(mc$classification, 30) # Cluster assignement of each observation
+  
+  # BIC values used for choosing the number of clusters
+  fviz_mclust(mc, "BIC", palette = "jco")
+  # Classification: plot showing the clustering
+  fviz_mclust(mc, "classification", geom = "point",
+              pointsize = 1.5, palette = "jco")
+  # Classification uncertainty
+  fviz_mclust(mc, "uncertainty", palette = "jco")
+  
+  
+  
+  
   ###############################################################
   # for the number of clusters selected, get the k-means object##
   ###############################################################
