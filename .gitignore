@@ -11,7 +11,7 @@ JS_docs/
 Analyses/Inputs/001_Raw_data/reads.txt
 Analyses/Inputs/002_Processed/whole/reads_whole.txt
 Analyses/Outputs/004_Clustering_plots/kmeans_concensus
-
+Docs/
 # Ignorar carpetas completas
 Analyses/Inputs/
 Analyses/Outputs/
