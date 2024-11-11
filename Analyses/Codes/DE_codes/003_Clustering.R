@@ -94,104 +94,8 @@ calc_ht_size = function(ht, unit = "inch") {
   norm_betas=data.frame(tab_norm)
   
   set.seed(12345)
-  
-  ### Elbow method (look at the knee)
-  # Elbow method for kmeans
-  elb_plot <- fviz_nbclust(norm_betas, kmeans, method = "wss") +
-    geom_vline(xintercept = 3, linetype = 2)
-  # k=3
-  pdf(file.path(cluster_dir,paste0("001_elbow_plt.pdf")),width=12,height=10)
-  print(elb_plot)
-  dev.off()
-  
-  # Average silhouette for kmeans
-  silo_plt <- fviz_nbclust(norm_betas, kmeans, method = "silhouette")
-  #k=2
-  pdf(file.path(cluster_dir,paste0("002_silhouette_plt.pdf")),width=12,height=10)
-  print(silo_plt)
-  dev.off()
-  
-  ### take a time to run
-  clust_res <- NbClust(data = norm_betas, diss = NULL, distance = "euclidean", 
-                       min.nc = 2,max.nc = 20, method = "kmeans", index = "all",
-                       alphaBeale = 0.1)
-  # *** : The Hubert index is a graphical method of determining the number of clusters.
-  # In the plot of Hubert index, we seek a significant knee that corresponds to a 
-  # significant increase of the value of the measure i.e the significant peak in Hubert
-  # index second differences plot. 
-  # 
-  # *** : The D index is a graphical method of determining the number of clusters. 
-  # In the plot of D index, we seek a significant knee (the significant peak in Dindex
-  # second differences plot) that corresponds to a significant increase of the value of
-  # the measure. 
-  # 
-  # ******************************************************************* 
-  #   * Among all indices:                                                
-  #   * 13 proposed 2 as the best number of clusters 
-  # * 2 proposed 3 as the best number of clusters 
-  # * 1 proposed 4 as the best number of clusters 
-  # * 4 proposed 6 as the best number of clusters 
-  # * 1 proposed 11 as the best number of clusters 
-  # * 1 proposed 12 as the best number of clusters 
-  # * 1 proposed 18 as the best number of clusters 
-  # * 1 proposed 19 as the best number of clusters 
-  # 
-  
-  clust_res$Best.nc
-  ### Is not the better approach
-  best.partition.list <- data.frame(clust_res$Best.partition)
-  
-  ### Define maximum number of clusters
-  kmax <- 20
-  
-  ### k-means clustering with concensus
-  data <- as.matrix(norm_betas,nrow=nrow(norm_betas), ncol=ncol(norm_betas))
-  data <- na.omit(data)
-  tdata <- t(data)
-  
-  rcc_kmeans = ConsensusClusterPlus(tdata,maxK=kmax,reps=100,pItem=0.8,pFeature=1,
-                              title="kmeans_concensus",distance="euclidean",clusterAlg="km",
-                              plot= "pngBMP")
-  ### hierarchical clustering with concensus
-  rcc_hc = ConsensusClusterPlus(tdata,maxK=kmax,reps=100,pItem=0.8,pFeature=1,
-                             title="hclust_concensus",distance="pearson",clusterAlg="hc",
-                             plot="pngBMP")
-  
-  set.seed(12345)
-  
-  #################################
-  ## Mclust clustering algorithm ##
-  #################################
-  
-  mc <- Mclust(norm_betas) # Model-based-clustering
-  summary(mc) # Print a summary
-  
-  mc$modelName # Optimal selected model ==> "VVV"
-  mc$G # Optimal number of cluster => 3
-  head(mc$z, 30) # Probality to belong to a given cluster
-  head(mc$classification, 30) # Cluster assignement of each observation
-  
-  cluster_out <- data.frame(norm_betas,Mclust_7k=mc$classification)
-  
-  # BIC values used for choosing the number of clusters
-  BIC_plt <- fviz_mclust(mc, "BIC", palette = "jco")
-  
-  pdf(file.path(cluster_dir,paste0("008_bic_Mclust.pdf")),width=12,height=10)
-  print(BIC_plt)
-  dev.off()
-  
-  # Classification: plot showing the clustering
-  pca_mclust <- fviz_mclust(mc, "classification", geom = "point",
-              pointsize = 1.5, palette = "jco")
-  pdf(file.path(cluster_dir,paste0("009_pca_Mclust.pdf")),width=12,height=10)
-  print(pca_mclust)
-  dev.off()
-  # Classification uncertainty
-  uncert_plt <- fviz_mclust(mc, "uncertainty", palette = "jco")
-  pdf(file.path(cluster_dir,paste0("010_uncertainty_Mclust.pdf")),width=12,height=10)
-  print(uncert_plt)
-  dev.off()
-  
+}
+{
   ##############################################
   ##  Run kmeans for kmax number of clusters  ##
   ##############################################
@@ -204,19 +108,337 @@ calc_ht_size = function(ht, unit = "inch") {
   
   for (number_clusters in vec) {
     
-    kmeans_res[[number_clusters]] <- kmeans(tab[, 1:4], centers=number_clusters,
+    kmeans_res[[number_clusters]] <- kmeans(norm_betas[, 1:4], centers=number_clusters,
                                             iter.max = 100, 
                                             nstart = number_clusters)
     cluster_list[[number_clusters]] <-kmeans_res[[number_clusters]]$cluster
     
   }
-  ### check the order of the gene names in each data
-  length(which(rownames(norm_betas) != names(kmeans_res[[6]]$cluster)))
   
-  cluster_out <- data.frame(cluster_out,kmeans_cluster_7k=kmeans_res[[7]]$cluster,
-                          kmeans_cluster_12k=kmeans_res[[12]]$cluster,
-                          kmeans_cluster_16k=kmeans_res[[16]]$cluster)
+  wss <- numeric(20)
+  wss[1] <- (nrow(norm_betas)-1)*sum(apply(norm_betas,2,var))
   
+  # Compute the within sum of squares (WSS) for each number of clusters
+  for (i in 2:20) {
+    wss[i] <- sum(kmeans(norm_betas, centers = i,iter.max = 100, 
+                         nstart = number_clusters)$withinss)
+    
+  }
+  
+  # Realizar el gráfico después de completar el bucle
+  plot(1:20, wss, type = "b", xlab = "Number of Clusters",
+       ylab = "Within groups sum of squares")
+  
+ ### Function to calculate the BIC and the AIC for clustering algorithms
+   
+  kmeansAIC_BIC = function(fit){
+    
+    m = ncol(fit$centers)   # Number of conditions or samples
+    n = length(fit$cluster) # Number of genes or rows
+    k = nrow(fit$centers)   # Number of centers or clusters
+    D = fit$tot.withinss    # Total within sum of squares
+    return(data.frame(AIC = D + 2*m*k,
+                      BIC = D + log(n)*m*k))
+  }
+  
+   ### Define the list to capture AIC and BIC outputs
+   ic_values          <- list()
+   ic_values_hckmeans <- list()
+   ### Define the list to capture kmeans an hckmeans outputs
+   
+   kmeans_model   <- list()
+   hckmeans_model <- list()  
+   ### Define the max number of clusters yopu want to inspect
+   k_vec <- seq(40)
+   
+   for (k in k_vec) {
+     
+     kmeans_model[[k]] <- kmeans(norm_betas, 
+                                 centers = k, 
+                                 nstart = k,
+                                 iter.max = 100)
+     hckmeans_model[[k]] <- hkmeans(norm_betas,
+                                    k=k,
+                                    hc.metric = "euclidean",
+                                    hc.method = "ward.D2",
+                                    iter.max = 100,
+                                    km.algorithm = "Hartigan-Wong")
+     
+     ic_values[[k]]          <- kmeansAIC_BIC(kmeans_model[[k]])
+     ic_values_hckmeans[[k]] <- kmeansAIC_BIC(hckmeans_model[[k]])
+   }
+   
+   
+   ### Extract the AIC and BIC values form the list
+   AIC_values <- sapply(ic_values, function(x) x[[1]])
+   BIC_values <- sapply(ic_values, function(x) x[[2]])
+   AIC_values_hckmeans <- sapply(ic_values_hckmeans, function(x) x[[1]])
+   BIC_values_hckmeans <- sapply(ic_values_hckmeans, function(x) x[[2]])
+  
+   ### Create the df with all the information criterion from the two models
+   ic_df <- data.frame(k.clusters=k_vec, AIC.Values=AIC_values,BIC.Values=BIC_values,
+                       AIC.Values.hckmeans=AIC_values_hckmeans,BIC.Values.hckmeans=BIC_values_hckmeans)
+   
+   ### Plot and save the graphs
+   
+   #ic_df         <- data frame with the number of clusters and the AIC and BIC values of each model
+   #col_to_select <- string of the colname with the respective clustering model
+   #ylab          <- y axis label as string
+   #color         <- color of the points
+   #color_opt     <- color orf the point representing the optimal number of clusters
+   
+   info_crit_plt <-function(ic_df,col_to_select,ylab ="IC",color ="red",color_opt="blue") {
+     
+     min_ic <- min(ic_df[[col_to_select]])
+     cat("the optimal number of clusters is:", ic_df[which(ic_df[col_to_select]==min_ic),1] )
+     
+     IC_plt <- ggplot(ic_df)+
+       geom_point(aes(x=k.clusters,y=.data[[col_to_select]]),size=2.5,color=color)+
+       geom_point(data = subset(ic_df, ic_df[[col_to_select]] == min_ic),
+                  aes_string(x = "k.clusters", y = col_to_select), color = color_opt, size = 3.5) + # Punto mínimo en azul
+       xlab("Number of Clusters")+
+       ylab(ylab)+
+       theme_classic()+
+       theme(axis.text.y   = element_text(size=18),
+             axis.text.x   = element_text(size=18),
+             axis.title.y  = element_text(size=18),
+             axis.title.x  = element_text(size=18),
+             panel.background = element_blank(),
+             panel.grid.major = element_blank(),
+             panel.grid.minor = element_blank(),
+             axis.line = element_line(colour = "black"),
+             panel.border = element_rect(colour = "black", fill=NA, linewidth=1,linetype="solid"))
+     
+     pdf(file.path(cluster_dir,paste0("001_",ylab,"_plt.pdf")),width = 12,height = 10)
+     print(IC_plt)
+     dev.off()
+     
+     return(IC_plt)
+   }
+   
+   AIC_plt <- info_crit_plt(ic_df = ic_df,col_to_select = "AIC.Values",ylab = "AIC" )
+   # the optimal number of clusters is: 24
+   
+   BIC_plt <- info_crit_plt(ic_df = ic_df,col_to_select = "BIC.Values",ylab = "BIC",color = "blue",color_opt = "red")
+   # the optimal number of clusters is: 9
+   
+   AIC_hckmeans_plt <- info_crit_plt(ic_df = ic_df,col_to_select = "AIC.Values.hckmeans",ylab = "AIC hckmeans" )
+   # the optimal number of clusters is: 22
+   
+   BIC_hckmeans_plt <- info_crit_plt(ic_df = ic_df,col_to_select = "BIC.Values.hckmeans",ylab = "BIC hckmeans",color = "blue",color_opt = "red" )
+   # the optimal number of clusters is: 11
+
+   
+   ### check the order of the gene names in each data
+   length(which(rownames(norm_betas) != names(kmeans_model[[24]]$cluster)))
+   length(which(rownames(norm_betas) != names(hckmeans_model[[22]]$cluster)))
+  
+   cluster_out <- data.frame(norm_betas,kmeans_cluster_9k=kmeans_model[[9]]$cluster,
+                             kmeans_cluster_25k=kmeans_model[[25]]$cluster,
+                             hckmeans_cluster_11k=hckmeans_model[[11]]$cluster,
+                             hckmeans_cluster_22k=hckmeans_model[[22]]$cluster)
+  
+}  
+
+#################################
+## Mclust clustering algorithm ##
+#################################
+seed(12345)
+mc <- Mclust(norm_betas) # Model-based-clustering
+summary(mc) # Print a summary
+
+mc$modelName # Optimal selected model ==> "VEE"
+mc$G # Optimal number of cluster => 8
+head(mc$z, 30) # Probality to belong to a given cluster
+head(mc$classification, 30) # Cluster assignement of each observation
+
+cluster_out <- data.frame(cluster_out,Mclust_8k=mc$classification)
+
+# BIC values used for choosing the number of clusters
+BIC_plt <- fviz_mclust(mc, "BIC", palette = "jco")
+
+pdf(file.path(cluster_dir,paste0("001_BIC_Mclust.pdf")),width=12,height=10)
+print(BIC_plt)
+dev.off()
+
+cluster_input_dir <- file.path(input_dir,"003_Clustering_tabs")
+dir.create(cluster_input_dir,recursive = T,showWarnings = F)
+
+saveRDS(kmeans_model, file = file.path(cluster_input_dir,"001_kmeans_clustering.RDS")) 
+saveRDS(hckmeans_model, file = file.path(cluster_input_dir,"001_hckmeans_clustering.RDS")) 
+
+write.table(cluster_out,file.path(cluster_input_dir,"lfc_with_clustering.txt"))
+
+###############################################################
+# for the number of clusters selected, get the k-means object##
+###############################################################
+
+{
+
+cluster_out <- read.table(file.path(cluster_input_dir,"lfc_with_clustering.txt"))
+
+col_fun = colorRamp2(c(-1, 0, 1), c("#FFA373", "white","#50486D"))
+col_fun = colorRamp2(c(-1, 0, 1), c("blue", "white","red"))
+# cluster_colors <- c("1" = "#FF6347",   # Tomato
+#                     "2" = "#4682B4",   # SteelBlue
+#                     "3" = "#32CD32",   # LimeGreen
+#                     "4" = "#FFD700",   # Gold
+#                     "5" = "#8A2BE2",   # BlueViolet
+#                     "6" = "#FF1493",   # DeepPink
+#                     "7" = "#2E8B57")   # SeaGreen
+
+cluster_colors <- c("1" = "#FF6347",   # Tomato
+                    "2" = "#4682B4",   # SteelBlue
+                    "3" = "#32CD32",   # LimeGreen
+                    "4" = "#FFD700",   # Gold
+                    "5" = "#8A2BE2",   # BlueViolet
+                    "6" = "#FF1493",   # DeepPink
+                    "7" = "#2E8B57",   # SeaGreen
+                    "8" = "#D2691E",   # Chocolate
+                    "9" = "#A52A2A",   # Brown
+                    "10" = "#00FFFF",  # Cyan
+                    "11" = "#FF00FF",  # Magenta
+                    "12" = "#800000",  # Maroon
+                    "13" = "#808000",  # Olive
+                    "14" = "#FF8C00",  # DarkOrange
+                    "15" = "#C71585",  # MediumVioletRed
+                    "16" = "#000080")  # Navy
+# Colors using colorRampPalette
+n_colors <- 25  # Total de colores que quieres
+palette_continuous <- colorRampPalette(cluster_colors)(n_colors)
+
+# Now we use the selected colors
+cluster_colors <- palette_continuous
+names(cluster_colors) <- 1:length(cluster_colors)
+
+vec <- 5:ncol(cluster_out)
+
+for(i in vec){
+  
+  lfc_normalized <- cluster_out[,c(1:4,i)]
+  
+  lfc_normalized[,5]=factor(lfc_normalized[,5],levels=unique(sort(lfc_normalized[,5])))
+  
+  table=lfc_normalized[order(lfc_normalized[,5]),]
+  hclust_matrix <- table[1:4] %>% 
+    as.matrix()
+  columns_name <- colnames(table)[1:4]
+  column_title = "Conditions"
+  clust_name <- "Genes"
+  cluster_colors_ha <- cluster_colors[1:max(as.numeric(table[,5]))]
+  split <- as.numeric(table[,5])
+  order_rows <- rownames(table)
+  length(which(rownames(hclust_matrix)!=rownames(table)))
+  
+  ha <- rowAnnotation(Cluster = as.factor(table[,5]),col = list(Cluster = cluster_colors_ha),
+                      annotation_legend_param = list(
+                        title = "Cluster", 
+                        labels = unique(table[,5])  # Esto incluye los números de los clusters
+                      ),
+                      border = TRUE)
+  
+  ht_plt <- Heatmap(hclust_matrix,
+                    na_col = "grey2",
+                    col = col_fun,
+                    split = split,
+                    # row_split = split,
+                    row_order = order_rows,
+                    name="expression levels",
+                    column_order = columns_name,
+                    show_column_names = T,
+                    column_names_gp = gpar(fontsize = 6),
+                    row_names_gp = gpar(fontsize = 6),
+                    column_title = column_title,
+                    column_title_side = "bottom",
+                    # row_dend_reorder=T,
+                    border_gp = gpar(col = "black", lty = 2),
+                    # heatmap_height = unit(6, "cm"),
+                    # heatmap_width = unit(8, "cm"),
+                    width=unit(3, "cm"),
+                    # show_column_dend = T,
+                    # column_dend_side = "top",
+                    # cluster_rows = color_branches(OR_clust,k=k),
+                    # cluster_columns = color_branches(col_dend),
+                    row_title = clust_name,
+                    row_title_gp = gpar(fontize = 2),
+                    # row_dend_side = "right",
+                    # row_names_side = "left",
+                    # row_dend_width = unit(2, "cm"),
+                    show_row_names = F ,
+                    show_row_dend = F,
+                    right_annotation = ha,
+                    # layer_fun = function(j, i, x, y, width, height, fill) {
+                    #   grid.text(round(hclust_matrix[i, j],digits = 2), x, y, gp = gpar(fontsize = 3))},
+                    heatmap_legend_param = list(title = "Normalized Exp Levels",
+                                                title_position = "leftcenter-rot",
+                                                labels_gp = gpar(font = 3),
+                                                title_gp = gpar( fontsize = 8)))
+  
+  draw(ht_plt)
+  
+  ### Compute the size of the htmap
+  size <- calc_ht_size(ht_plt)
+  
+  ### Save the data
+  filename <- file.path(cluster_dir,paste0("002_Heatmap_normalized_",colnames(table)[5],".pdf"))
+  
+  pdf(file =filename ,width=size[1]+1,height=size[2]+2)
+  draw(ht_plt,ht_gap=unit(0.5,"mm"))
+  dev.off()
+  
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
   ### Check the size of the cluster partitions
   kmeans_res[[7]]$size
   # 482  374   53 1667 2128  187
@@ -230,216 +452,8 @@ calc_ht_size = function(ht, unit = "inch") {
   # Define vector with the 3 k we are going to use
   k_clusters <- c(k_7=7,k_12=12,k_16=16)
   
-  for (k in k_clusters) {
-    
-    print(k)
-    ### PCA for kmean
-    pca_kmean <- fviz_cluster(kmeans_res[[k]], norm_betas,stand = F,axes = c(1,2),geom="point",
-                              ellipse.alpha = 0.1,ellipse.type = "norm",ggtheme = theme_classic())
+  
 
-    ### Hierarchical clustering
-    hclust_dend <- fviz_dend(hclust(dist(norm_betas)), k = k, k_colors = "jco",
-                             as.ggplot = TRUE, show_labels = FALSE)
-    
-    pdf(file.path(cluster_dir,paste0("003_pca_kmean_k=",k,".pdf")),width=12,height=10)
-    print(pca_kmean)
-    dev.off()
-    
-    pdf(file.path(cluster_dir,paste0("004_hclust_dendrogram_k=",k,".pdf")),width=12,height=10)
-    print(hclust_dend)
-    dev.off()
-    
-  }
-  
-  
-  #####################################
-  ##  Cluster Tendency with Hopkins  ##
-  #####################################
-  
-  
-  # If the value of Hopkins statistic is close to zero, then we can reject 
-  # the null hypothesis and conclude that the data set D is significantly 
-  # a clusterable data.
- 
-  ###Compute Hopkins statistic for log fold changes
-  # set.seed(12345)
-  hopkins(norm_betas, n = nrow(norm_betas)-1)
-  
-  # About 0.09 tho, is clusterizable
-  
-  ### Dissimilarity matrix
-  dis_mat <- fviz_dist(dist(norm_betas), show_labels = FALSE)+
-    labs(title = "TB infection over time (DM)")
- 
-  ggsave(
-    filename = file.path(cluster_dir, "005_Dissimilarity_matrix.png"),
-    plot = dis_mat,
-    width = 12, 
-    height = 10, 
-    dpi = 300  # Adjust the dpi resolution
-  )
- 
-  #####################################
-  ## Hierarchichal k-means algorithm ##
-  #####################################
- 
-  hckmeans_res <- list()
-  # rect_colors <-colorRampPalette(brewer.pal(12, "Set3"))(16)
-  
-  for(k in c(1:3)){
-    
-    hckmeans_res[[k]] <- hkmeans(
-      norm_betas,
-      k=k_clusters[k],
-      hc.metric = "euclidean",
-      hc.method = "ward.D2",
-      iter.max = 10,
-      km.algorithm = "Hartigan-Wong"
-    )
-      ### Create a dendrogram
-      rect_colors  <-  colorRampPalette(brewer.pal(12, "Set3"))(k)
-      
-      # dend_hckmean <-  hkmeans_tree(hckmeans_res[[k]], rect.col = rect_colors)
-      # Visualize the tree
-      dend_hckmean <-fviz_dend(hckmeans_res[[k]], cex = 0.6, palette = "jco",show_labels = F,
-                rect = TRUE, rect_border = "jco", rect_fill = TRUE)
-
-      pca_hckmean <- fviz_cluster(hckmeans_res[[k]], norm_betas,stand = F,axes = c(1,2),geom="point",
-                                  ellipse.alpha = 0.1,ellipse.type = "norm",ggtheme = theme_classic())
-      
-      pdf(file.path(cluster_dir,paste0("006_pca_hckmean_k=",k_clusters[k],".pdf")),width=12,height=10)
-      print(pca_hckmean)
-      dev.off()
-      
-      pdf(file.path(cluster_dir,paste0("007_hckmean_dendrogram_k=",k_clusters[k],".pdf")),width=12,height=10)
-      print(dend_hckmean)
-      dev.off()
-    
-  }
-  safe <- cluster_out
-  cluster_out <- data.frame(cluster_out,hckmeans_7k=hckmeans_res[[1]]$cluster,
-                            hckmeans_12k=hckmeans_res[[2]]$cluster,
-                            hckmeans_16k=hckmeans_res[[3]]$cluster)
-  
-  cluster_input_dir <- file.path(input_dir,"003_Clustering_tabs")
-  dir.create(cluster_input_dir,recursive = T,showWarnings = F)
-  
-  saveRDS(hckmeans_res, file = file.path(cluster_input_dir,"001_hckmeans.RDS")) 
- 
-  write.table(cluster_out,file.path(cluster_input_dir,"lfc_with_clustering.txt"))
-  
-  ###############################################################
-  # for the number of clusters selected, get the k-means object##
-  ###############################################################
-  cluster_out <- read.table(file.path(cluster_input_dir,"lfc_with_clustering.txt"))
-  
-  col_fun = colorRamp2(c(-1, 0, 1), c("#FFA373", "white","#50486D"))
-  col_fun(seq(-1, 1))
-  col_fun = colorRamp2(c(-1, 0, 1), c("blue", "white","red"))
-  # cluster_colors <- c("1" = "#FF6347",   # Tomato
-  #                     "2" = "#4682B4",   # SteelBlue
-  #                     "3" = "#32CD32",   # LimeGreen
-  #                     "4" = "#FFD700",   # Gold
-  #                     "5" = "#8A2BE2",   # BlueViolet
-  #                     "6" = "#FF1493",   # DeepPink
-  #                     "7" = "#2E8B57")   # SeaGreen
-  
-  cluster_colors <- c("1" = "#FF6347",   # Tomato
-                      "2" = "#4682B4",   # SteelBlue
-                      "3" = "#32CD32",   # LimeGreen
-                      "4" = "#FFD700",   # Gold
-                      "5" = "#8A2BE2",   # BlueViolet
-                      "6" = "#FF1493",   # DeepPink
-                      "7" = "#2E8B57",   # SeaGreen
-                      "8" = "#D2691E",   # Chocolate
-                      "9" = "#A52A2A",   # Brown
-                      "10" = "#00FFFF",  # Cyan
-                      "11" = "#FF00FF",  # Magenta
-                      "12" = "#800000",  # Maroon
-                      "13" = "#808000",  # Olive
-                      "14" = "#FF8C00",  # DarkOrange
-                      "15" = "#C71585",  # MediumVioletRed
-                      "16" = "#000080")  # Navy
-  vec <- 5:ncol(cluster_out)
-  
-  for(i in vec){
-    
-    lfc_normalized <- cluster_out[,c(1:4,i)]
-    
-    lfc_normalized[,5]=factor(lfc_normalized[,5],levels=unique(sort(lfc_normalized[,5])))
-    
-    table=lfc_normalized[order(lfc_normalized[,5]),]
-    hclust_matrix <- table[1:4] %>% 
-      as.matrix()
-    columns_name <- colnames(table)[1:4]
-    column_title = "Conditions"
-    clust_name <- "Genes"
-    cluster_colors_ha <- cluster_colors[1:max(as.numeric(table[,5]))]
-    split <- as.numeric(table[,5])
-    order_rows <- rownames(table)
-    length(which(rownames(hclust_matrix)!=rownames(table)))
-    
-    ha <- rowAnnotation(Cluster = as.factor(table[,5]),col = list(Cluster = cluster_colors_ha),
-                        annotation_legend_param = list(
-                          title = "Cluster", 
-                          labels = unique(table[,5])  # Esto incluye los números de los clusters
-                        ),
-                        border = TRUE)
-    
-    ht_plt <- Heatmap(hclust_matrix,
-                      na_col = "grey2",
-                      col = col_fun,
-                      split = split,
-                      # row_split = split,
-                      row_order = order_rows,
-                      name="expression levels",
-                      column_order = columns_name,
-                      show_column_names = T,
-                      column_names_gp = gpar(fontsize = 6),
-                      row_names_gp = gpar(fontsize = 6),
-                      column_title = column_title,
-                      column_title_side = "bottom",
-                      # row_dend_reorder=T,
-                      border_gp = gpar(col = "black", lty = 2),
-                      # heatmap_height = unit(6, "cm"),
-                      # heatmap_width = unit(8, "cm"),
-                      width=unit(3, "cm"),
-                      # show_column_dend = T,
-                      # column_dend_side = "top",
-                      # cluster_rows = color_branches(OR_clust,k=k),
-                      # cluster_columns = color_branches(col_dend),
-                      row_title = clust_name,
-                      row_title_gp = gpar(fontize = 2),
-                      # row_dend_side = "right",
-                      # row_names_side = "left",
-                      # row_dend_width = unit(2, "cm"),
-                      show_row_names = F ,
-                      show_row_dend = F,
-                      right_annotation = ha,
-                      # layer_fun = function(j, i, x, y, width, height, fill) {
-                      #   grid.text(round(hclust_matrix[i, j],digits = 2), x, y, gp = gpar(fontsize = 3))},
-                      heatmap_legend_param = list(title = "Normalized Exp Levels",
-                                                  title_position = "leftcenter-rot",
-                                                  labels_gp = gpar(font = 3),
-                                                  title_gp = gpar( fontsize = 8)))
-    
-    draw(ht_plt)
-    
-    ### Compute the size of the htmap
-    size <- calc_ht_size(ht_plt)
-    
-    ### Save the data
-    filename <- file.path(cluster_dir,paste0("011_Heatmap_normalized_",colnames(table)[5],".pdf"))
-    
-    pdf(file =filename ,width=size[1]+1,height=size[2]+2)
-    draw(ht_plt,ht_gap=unit(0.5,"mm"))
-    dev.off()
-    
-    
-  }
-  
-  
-  }
 
 
 
