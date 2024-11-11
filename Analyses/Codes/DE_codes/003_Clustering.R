@@ -5,6 +5,7 @@
 
 {
   library(tidyr)
+  library(dplyr)
   library(ggthemes)
   library(ggplot2)
   library(ggrepel)
@@ -390,14 +391,58 @@ for(i in vec){
 }
 
 
+######################################
+##  Compute the trends per cluster  ##
+######################################
+
+# Compute the mean and the sd by cluster
+i=5
+df <- cluster_out
+df_por_clusters <- split(df, df[,i])
+
+
+result_mean <- df %>%
+  summarize(
+    Mean_beta_inf_2 = mean(beta_inf_2),
+    Mean_beta_inf_20 = mean(beta_inf_20),
+    Mean_beta_inf_48 = mean(beta_inf_48),
+    Mean_beta_inf_72 = mean(beta_inf_72),
+    sd_beta_inf_2 = sd(beta_inf_2),
+    sd_beta_inf_20 = sd(beta_inf_20),
+    sd_beta_inf_48 = sd(beta_inf_48),
+    sd_beta_inf_72 = sd(beta_inf_72)
+  )
+
+result_sd <- result_mean[5:8]
+result_mean <- result_mean[1:4]
+
+data_mean <- pivot_longer(result_mean,cols = c(Mean_beta_inf_2,Mean_beta_inf_20,Mean_beta_inf_48,Mean_beta_inf_72),
+                          names_to = "Conditions",values_to = "Mean")
+data_mean$Conditions <- factor(data_mean$Conditions,levels = c("Mean_beta_inf_2","Mean_beta_inf_20","Mean_beta_inf_48","Mean_beta_inf_72") )
+
+data_sd <- pivot_longer(result_sd,cols = c(sd_beta_inf_2,sd_beta_inf_20,sd_beta_inf_48,sd_beta_inf_72),
+                          names_to = "Conditions",values_to = "sd")
+data_sd$Conditions <- factor(data_sd$Conditions,levels = c("sd_beta_inf_2","sd_beta_inf_20","sd_beta_inf_48","sd_beta_inf_72"))
 
 
 
+mean_plt_fun <- ggplot(data = dataframe,aes(x = x,y = abs(Mean), color = Routes))+
+  geom_line(aes(group = Routes),arrow=myarrow,lwd=2)+
+  geom_point(aes(color = Routes),size=4)+
+  scale_color_manual(name = "Routes",values = col)+
+  geom_errorbar(aes(ymin = abs(Mean)-sd, ymax=abs(Mean)+sd),
+                linewidth = 0.6, width = 0.1, position = position_dodge(0.2),alpha=0.5)+
+  ylab("Mean")+
+  ggtitle("")+
+  theme_classic()
 
+print(mean_plt_fun)
 
+filename <- file.path(output_dir,"4_Figures_paper","16_Figure_4C_Trends_per_route_error_bar.pdf")
 
-
-
+pdf(file =filename,width = 9)
+print(mean_plt_fun)
+dev.off()
 
 
 
