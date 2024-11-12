@@ -60,6 +60,7 @@ calc_ht_size = function(ht, unit = "inch") {
   
   c(w, h)
 }
+
 ##########################################
 ##  1. Find optimal number of Clusters  ##
 ##########################################
@@ -191,12 +192,13 @@ calc_ht_size = function(ht, unit = "inch") {
    info_crit_plt <-function(ic_df,col_to_select,ylab ="IC",color ="red",color_opt="blue") {
      
      min_ic <- min(ic_df[[col_to_select]])
-     cat("the optimal number of clusters is:", ic_df[which(ic_df[col_to_select]==min_ic),1] )
+     cluster_selected <- ic_df[which(ic_df[col_to_select]==min_ic),1]
+     cat("the optimal number of clusters is:",cluster_selected)
      
      IC_plt <- ggplot(ic_df)+
        geom_point(aes(x=k.clusters,y=.data[[col_to_select]]),size=2.5,color=color)+
        geom_point(data = subset(ic_df, ic_df[[col_to_select]] == min_ic),
-                  aes_string(x = "k.clusters", y = col_to_select), color = color_opt, size = 3.5) + # Punto mínimo en azul
+                  aes(x = k.clusters, y = !!sym(col_to_select)), color = color_opt, size = 3.5) + # Punto mínimo en azul
        xlab("Number of Clusters")+
        ylab(ylab)+
        theme_classic()+
@@ -214,19 +216,24 @@ calc_ht_size = function(ht, unit = "inch") {
      print(IC_plt)
      dev.off()
      
-     return(IC_plt)
+     list_to_return <- list(IC_plt,cluster_selected)
+     return(list_to_return)
    }
    
-   AIC_plt <- info_crit_plt(ic_df = ic_df,col_to_select = "AIC.Values",ylab = "AIC" )
+   AIC_plt<- info_crit_plt(ic_df = ic_df,col_to_select = "AIC.Values",ylab = "AIC" )
+   cluster_selected_AIC <- AIC_plt[[2]]
    # the optimal number of clusters is: 24
    
    BIC_plt <- info_crit_plt(ic_df = ic_df,col_to_select = "BIC.Values",ylab = "BIC",color = "blue",color_opt = "red")
+   cluster_selected_BIC <- BIC_plt[[2]]
    # the optimal number of clusters is: 9
    
    AIC_hckmeans_plt <- info_crit_plt(ic_df = ic_df,col_to_select = "AIC.Values.hckmeans",ylab = "AIC hckmeans" )
+   cluster_selected_AIC_hckmeans <- AIC_hckmeans_plt[[2]]
    # the optimal number of clusters is: 22
    
    BIC_hckmeans_plt <- info_crit_plt(ic_df = ic_df,col_to_select = "BIC.Values.hckmeans",ylab = "BIC hckmeans",color = "blue",color_opt = "red" )
+   cluster_selected_BIC_hckmeans <- BIC_hckmeans_plt[[2]]
    # the optimal number of clusters is: 11
 
    
@@ -234,17 +241,16 @@ calc_ht_size = function(ht, unit = "inch") {
    length(which(rownames(norm_betas) != names(kmeans_model[[24]]$cluster)))
    length(which(rownames(norm_betas) != names(hckmeans_model[[22]]$cluster)))
   
-   cluster_out <- data.frame(norm_betas,kmeans_cluster_9k=kmeans_model[[9]]$cluster,
-                             kmeans_cluster_25k=kmeans_model[[25]]$cluster,
-                             hckmeans_cluster_11k=hckmeans_model[[11]]$cluster,
-                             hckmeans_cluster_22k=hckmeans_model[[22]]$cluster)
-  
-}  
+   names_of_df_col <- c(paste0("kmeans_cluster_k=",cluster_selected_BIC),
+                        paste0("kmeans_cluster_k=",cluster_selected_AIC),
+                        paste0("hckmeans_cluster_k=",cluster_selected_BIC_hckmeans),
+                        paste0("hckmeans_cluster_k=",cluster_selected_AIC_hckmeans))
+   
+   }  
 
 #################################
 ## Mclust clustering algorithm ##
 #################################
-seed(12345)
 mc <- Mclust(norm_betas) # Model-based-clustering
 summary(mc) # Print a summary
 
@@ -253,7 +259,15 @@ mc$G # Optimal number of cluster => 8
 head(mc$z, 30) # Probality to belong to a given cluster
 head(mc$classification, 30) # Cluster assignement of each observation
 
-cluster_out <- data.frame(cluster_out,Mclust_8k=mc$classification)
+Mclust_name <- paste0("Mclust_k=",mc$G)
+cluster_out <- data.frame(norm_betas,
+                          kmeans   = kmeans_model[[cluster_selected_BIC]]$cluster,
+                          kmeans2  = kmeans_model[[cluster_selected_AIC]]$cluster,
+                          hckmeans = hckmeans_model[[cluster_selected_BIC_hckmeans]]$cluster,
+                          hckmeans2= hckmeans_model[[cluster_selected_AIC_hckmeans]]$cluster,
+                          Mclust.  = mc$classification)
+
+colnames(cluster_out) <-c(colnames(norm_betas), names_of_df_col,Mclust_name)
 
 # BIC values used for choosing the number of clusters
 BIC_plt <- fviz_mclust(mc, "BIC", palette = "jco")
@@ -278,7 +292,7 @@ write.table(cluster_out,file.path(cluster_input_dir,"lfc_with_clustering.txt"))
 
 cluster_out <- read.table(file.path(cluster_input_dir,"lfc_with_clustering.txt"))
 
-col_fun = colorRamp2(c(-1, 0, 1), c("#FFA373", "white","#50486D"))
+# col_fun = colorRamp2(c(-1, 0, 1), c("#FFA373", "white","#50486D"))
 col_fun = colorRamp2(c(-1, 0, 1), c("blue", "white","red"))
 # cluster_colors <- c("1" = "#FF6347",   # Tomato
 #                     "2" = "#4682B4",   # SteelBlue
@@ -394,110 +408,127 @@ for(i in vec){
 ######################################
 ##  Compute the trends per cluster  ##
 ######################################
-
+{
 # Compute the mean and the sd by cluster
-i=5
+result_mean_list <- list()
+result_sd        <- list()
+result_mean      <- list()
 df <- cluster_out
-df_por_clusters <- split(df, df[,i])
+vec_of_clust_columns <- c(5:ncol(df))
 
-
-result_mean <- df %>%
-  summarize(
-    Mean_beta_inf_2 = mean(beta_inf_2),
-    Mean_beta_inf_20 = mean(beta_inf_20),
-    Mean_beta_inf_48 = mean(beta_inf_48),
-    Mean_beta_inf_72 = mean(beta_inf_72),
-    sd_beta_inf_2 = sd(beta_inf_2),
-    sd_beta_inf_20 = sd(beta_inf_20),
-    sd_beta_inf_48 = sd(beta_inf_48),
-    sd_beta_inf_72 = sd(beta_inf_72)
-  )
-
-result_sd <- result_mean[5:8]
-result_mean <- result_mean[1:4]
-
-data_mean <- pivot_longer(result_mean,cols = c(Mean_beta_inf_2,Mean_beta_inf_20,Mean_beta_inf_48,Mean_beta_inf_72),
-                          names_to = "Conditions",values_to = "Mean")
-data_mean$Conditions <- factor(data_mean$Conditions,levels = c("Mean_beta_inf_2","Mean_beta_inf_20","Mean_beta_inf_48","Mean_beta_inf_72") )
-
-data_sd <- pivot_longer(result_sd,cols = c(sd_beta_inf_2,sd_beta_inf_20,sd_beta_inf_48,sd_beta_inf_72),
-                          names_to = "Conditions",values_to = "sd")
-data_sd$Conditions <- factor(data_sd$Conditions,levels = c("sd_beta_inf_2","sd_beta_inf_20","sd_beta_inf_48","sd_beta_inf_72"))
-
-
-
-mean_plt_fun <- ggplot(data = dataframe,aes(x = x,y = abs(Mean), color = Routes))+
-  geom_line(aes(group = Routes),arrow=myarrow,lwd=2)+
-  geom_point(aes(color = Routes),size=4)+
-  scale_color_manual(name = "Routes",values = col)+
-  geom_errorbar(aes(ymin = abs(Mean)-sd, ymax=abs(Mean)+sd),
-                linewidth = 0.6, width = 0.1, position = position_dodge(0.2),alpha=0.5)+
-  ylab("Mean")+
-  ggtitle("")+
-  theme_classic()
-
-print(mean_plt_fun)
-
-filename <- file.path(output_dir,"4_Figures_paper","16_Figure_4C_Trends_per_route_error_bar.pdf")
-
-pdf(file =filename,width = 9)
-print(mean_plt_fun)
-dev.off()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- 
-  ### Check the size of the cluster partitions
-  kmeans_res[[7]]$size
-  # 482  374   53 1667 2128  187
-  kmeans_res[[12]]$size
-  # [1]   72  319 1005  303  233  140    6   39  566  861   74 1273
-  kmeans_res[[16]]$size
-  # 133  74 513 184  39 646 244 255   6  42 872 115 214 247 742 565
+for (i in vec_of_clust_columns){
   
-  ### Plot and Save PCA for kmean and Hclust dendrogram for 3 k number of clusters
+  folder_to_save <- colnames(df)[i]
+  df_por_clusters <- split(df, df[,i])
+  names(df_por_clusters) <- paste0("k=",names(df_por_clusters))
   
-  # Define vector with the 3 k we are going to use
-  k_clusters <- c(k_7=7,k_12=12,k_16=16)
+  #j is going to from k=0 up the max k clusters of the list
   
   
+  for (j in seq(df_por_clusters)) {
+    
+    result_mean_list[[j]] <- df_por_clusters[[j]][1:4] %>%
+      summarize(
+        Mean_beta_inf_2 = mean(beta_inf_2),
+        Mean_beta_inf_20 = mean(beta_inf_20),
+        Mean_beta_inf_48 = mean(beta_inf_48),
+        Mean_beta_inf_72 = mean(beta_inf_72),
+        sd_beta_inf_2 = sd(beta_inf_2),
+        sd_beta_inf_20 = sd(beta_inf_20),
+        sd_beta_inf_48 = sd(beta_inf_48),
+        sd_beta_inf_72 = sd(beta_inf_72)
+      )
+    
+    result_sd[[j]] <- result_mean_list[[j]][5:8]
+    result_mean[[j]] <- result_mean_list[[j]][1:4]
+    
+    data_mean <- pivot_longer(result_mean[[j]],cols = c(Mean_beta_inf_2,Mean_beta_inf_20,Mean_beta_inf_48,Mean_beta_inf_72),
+                              names_to = "Conditions",values_to = "Mean")
+    data_mean$Conditions <- factor(data_mean$Conditions,levels = c("Mean_beta_inf_2","Mean_beta_inf_20","Mean_beta_inf_48","Mean_beta_inf_72") )
+    
+    data_sd <- pivot_longer(result_sd[[j]],cols = c(sd_beta_inf_2,sd_beta_inf_20,sd_beta_inf_48,sd_beta_inf_72),
+                            names_to = "Conditions",values_to = "sd")
+    data_sd$Conditions <- factor(data_sd$Conditions,levels = c("sd_beta_inf_2","sd_beta_inf_20","sd_beta_inf_48","sd_beta_inf_72"))
+    
+    dataframe <- data.frame(data_mean,sd=data_sd$sd)
+    dataframe$x_num <- 1:nrow(dataframe)
+    
+    myarrow=arrow(angle = 15, ends = "last", type = "closed")
+    col <- c("red", "green", "blue","cyan")
+    # Define the line color and SD shading
+    line_color <- "black" # Change this value to the desired line color
+    ribbon_color <- "grey30" # Change this value to the desired shading color
+    
+    mean_plt_fun <- ggplot(data = dataframe, aes(x = x_num, y = Mean)) +
+      geom_line(aes(group = 1), color = line_color, arrow = myarrow, lwd = 2) +
+      geom_point(color = col, size = 4) +
+      geom_ribbon(aes(ymin = Mean - sd, ymax = Mean + sd), fill = ribbon_color, alpha = 0.2) +
+      scale_x_continuous(breaks = dataframe$x_num, labels = dataframe$Conditions) +
+      ylab("Mean") +
+      xlab("Conditions") +
+      ggtitle("") +
+      theme_classic() +
+      theme(axis.text.y = element_text(size = 18),
+            axis.text.x = element_text(size = 18, angle = 90),
+            axis.title.y = element_text(size = 18),
+            axis.title.x = element_text(size = 18),
+            panel.background = element_blank(),
+            panel.grid.major = element_blank(),
+            panel.grid.minor = element_blank(),
+            axis.line = element_line(colour = "black"),
+            panel.border = element_rect(colour = "black", fill = NA, linewidth = 1, linetype = "solid"))
+    
+    print(mean_plt_fun)
+    
+    trend_dir <- file.path(cluster_dir,"Trends_per_cluster",folder_to_save)
+    dir.create(trend_dir,showWarnings = F,recursive = T)
+    
+    pdf(file.path(trend_dir,paste0("k=",j,"_plt.pdf")),width = 10,height = 10)
+    print(mean_plt_fun)
+    dev.off()
+    
+  }
+  
+}
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
