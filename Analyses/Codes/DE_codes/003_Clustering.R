@@ -5,6 +5,7 @@
 
 {
   library(tidyr)
+  library(gridExtra)
   library(dplyr)
   library(ggthemes)
   library(ggplot2)
@@ -228,11 +229,11 @@ calc_ht_size = function(ht, unit = "inch") {
    cluster_selected_BIC <- BIC_plt[[2]]
    # the optimal number of clusters is: 9
    
-   AIC_hckmeans_plt <- info_crit_plt(ic_df = ic_df,col_to_select = "AIC.Values.hckmeans",ylab = "AIC hckmeans" )
+   AIC_hckmeans_plt <- info_crit_plt(ic_df = ic_df,col_to_select = "AIC.Values.hckmeans",ylab = "AIC_hckmeans" )
    cluster_selected_AIC_hckmeans <- AIC_hckmeans_plt[[2]]
    # the optimal number of clusters is: 22
    
-   BIC_hckmeans_plt <- info_crit_plt(ic_df = ic_df,col_to_select = "BIC.Values.hckmeans",ylab = "BIC hckmeans",color = "blue",color_opt = "red" )
+   BIC_hckmeans_plt <- info_crit_plt(ic_df = ic_df,col_to_select = "BIC.Values.hckmeans",ylab = "BIC_hckmeans",color = "blue",color_opt = "red" )
    cluster_selected_BIC_hckmeans <- BIC_hckmeans_plt[[2]]
    # the optimal number of clusters is: 11
 
@@ -410,10 +411,11 @@ for(i in vec){
 ######################################
 {
 # Compute the mean and the sd by cluster
-result_mean_list <- list()
-result_sd        <- list()
-result_mean      <- list()
-df <- cluster_out
+result_mean_list <- list() # list to save 
+result_sd        <- list() # list to save the sd 
+result_mean      <- list() # list to save the mean
+
+df <- cluster_out 
 vec_of_clust_columns <- c(5:ncol(df))
 
 for (i in vec_of_clust_columns){
@@ -423,7 +425,7 @@ for (i in vec_of_clust_columns){
   names(df_por_clusters) <- paste0("k=",names(df_por_clusters))
   
   #j is going to from k=0 up the max k clusters of the list
-  
+  plots_list       <- list() # list to save plt to create a grid
   
   for (j in seq(df_por_clusters)) {
     
@@ -466,19 +468,26 @@ for (i in vec_of_clust_columns){
       scale_x_continuous(breaks = dataframe$x_num, labels = dataframe$Conditions) +
       ylab("Mean") +
       xlab("Conditions") +
-      ggtitle("") +
+      ggtitle(paste0("k=",j)) +
       theme_classic() +
-      theme(axis.text.y = element_text(size = 18),
-            axis.text.x = element_text(size = 18, angle = 90),
-            axis.title.y = element_text(size = 18),
-            axis.title.x = element_text(size = 18),
-            panel.background = element_blank(),
-            panel.grid.major = element_blank(),
-            panel.grid.minor = element_blank(),
-            axis.line = element_line(colour = "black"),
-            panel.border = element_rect(colour = "black", fill = NA, linewidth = 1, linetype = "solid"))
+      theme(plot.title = element_text(size = 20, face = "bold", hjust = 0.5),
+        axis.text.y = element_text(size = 18),
+        axis.text.x = element_text(size = 18, angle = 90),
+        axis.title.y = element_text(size = 18),
+        axis.title.x = element_text(size = 18),
+        panel.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.line = element_line(colour = "black"),
+        panel.border = element_rect(colour = "black", 
+                                    fill = NA, 
+                                    linewidth = 1, 
+                                    linetype = "solid"))
     
-    print(mean_plt_fun)
+    # print(mean_plt_fun)
+    
+    # Save the plot in the list
+    plots_list[[paste0("k=", j)]] <- mean_plt_fun
     
     trend_dir <- file.path(cluster_dir,"Trends_per_cluster",folder_to_save)
     dir.create(trend_dir,showWarnings = F,recursive = T)
@@ -487,10 +496,20 @@ for (i in vec_of_clust_columns){
     print(mean_plt_fun)
     dev.off()
     
+    # Calculate the number of plots
+    num_plots <- length(plots_list)
+    
+    # Calculate the number of columns and rows to automatically adjust the layout
+    ncol_plots <- ceiling(sqrt(num_plots))  # Square root approximation for plot distribution
+    nrow_plots <- ceiling(num_plots / ncol_plots)  # Adjust based on the number of columns
+    
+    pdf(file.path(trend_dir,"grid_plt.pdf"),width = 40,height = 38)
+    # Use do.call with grid.arrange to display the plots with the appropriate number of rows and columns
+    do.call(grid.arrange, c(plots_list, ncol = ncol_plots, nrow = nrow_plots))
+    dev.off()
   }
   
 }
-
 }
 
 
