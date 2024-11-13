@@ -105,7 +105,7 @@ calc_ht_size = function(ht, unit = "inch") {
   ### Create a list to save the kmeans results
   kmeans_res <- list()
   cluster_list <- list()
-  kmax <- 20
+  kmax <- 25
   ### vector to loop
   vec <- seq(kmax)
   
@@ -151,7 +151,7 @@ calc_ht_size = function(ht, unit = "inch") {
    
    kmeans_model   <- list()
    hckmeans_model <- list()  
-   ### Define the max number of clusters yopu want to inspect
+   ### Define the max number of clusters you want to inspect
    k_vec <- seq(40)
    
    for (k in k_vec) {
@@ -513,8 +513,98 @@ for (i in vec_of_clust_columns){
 }
 
 
+#################################################
+##  Plot Heatmaps between AIC and BIC results  ##
+#################################################
 
+hckmeans_selected <- hckmeans_model[cluster_selected_BIC_hckmeans:cluster_selected_AIC_hckmeans]
+cluster_out1 <- norm_betas
 
+# Loop to add selected columns from each data frame in the list to the cluster_out1 df
+for (i in seq_along(hckmeans_selected)) {
+  # Select the column you want to add, e.g., cluster
+  col_to_add <- hckmeans_selected[[i]][["cluster"]]  
+  
+  # Add the column to cluster_out1 using the k clusters as a name
+  cluster_out1[[paste0("k_", i+cluster_selected_BIC_hckmeans-1)]] <- col_to_add
+}
+
+vec <- 5:ncol(cluster_out1)
+
+for(i in vec){
+  
+  lfc_normalized <- cluster_out1[,c(1:4,i)]
+  
+  lfc_normalized[,5]=factor(lfc_normalized[,5],levels=unique(sort(lfc_normalized[,5])))
+  
+  table=lfc_normalized[order(lfc_normalized[,5]),]
+  hclust_matrix <- table[1:4] %>% 
+    as.matrix()
+  columns_name <- colnames(table)[1:4]
+  column_title = "Conditions"
+  clust_name <- "Genes"
+  cluster_colors_ha <- cluster_colors[1:max(as.numeric(table[,5]))]
+  split <- as.numeric(table[,5])
+  order_rows <- rownames(table)
+  length(which(rownames(hclust_matrix)!=rownames(table)))
+  
+  ha <- rowAnnotation(Cluster = as.factor(table[,5]),col = list(Cluster = cluster_colors_ha),
+                      annotation_legend_param = list(
+                        title = "Cluster", 
+                        labels = unique(table[,5])  # Esto incluye los números de los clusters
+                      ),
+                      border = TRUE)
+  
+  ht_plt <- Heatmap(hclust_matrix,
+                    na_col = "grey2",
+                    col = col_fun,
+                    split = split,
+                    # row_split = split,
+                    row_order = order_rows,
+                    name="expression levels",
+                    column_order = columns_name,
+                    show_column_names = T,
+                    column_names_gp = gpar(fontsize = 6),
+                    row_names_gp = gpar(fontsize = 6),
+                    column_title = column_title,
+                    column_title_side = "bottom",
+                    # row_dend_reorder=T,
+                    border_gp = gpar(col = "black", lty = 2),
+                    # heatmap_height = unit(6, "cm"),
+                    # heatmap_width = unit(8, "cm"),
+                    width=unit(3, "cm"),
+                    # show_column_dend = T,
+                    # column_dend_side = "top",
+                    # cluster_rows = color_branches(OR_clust,k=k),
+                    # cluster_columns = color_branches(col_dend),
+                    row_title = clust_name,
+                    row_title_gp = gpar(fontize = 2),
+                    # row_dend_side = "right",
+                    # row_names_side = "left",
+                    # row_dend_width = unit(2, "cm"),
+                    show_row_names = F ,
+                    show_row_dend = F,
+                    right_annotation = ha,
+                    # layer_fun = function(j, i, x, y, width, height, fill) {
+                    #   grid.text(round(hclust_matrix[i, j],digits = 2), x, y, gp = gpar(fontsize = 3))},
+                    heatmap_legend_param = list(title = "Normalized Exp Levels",
+                                                title_position = "leftcenter-rot",
+                                                labels_gp = gpar(font = 3),
+                                                title_gp = gpar( fontsize = 8)))
+  
+  draw(ht_plt)
+  
+  ### Compute the size of the heatmap
+  size <- calc_ht_size(ht_plt)
+  
+  ### Save the data
+  filename <- file.path(cluster_dir,paste0("003_Heatmap_hckmeans_",colnames(table)[5],".pdf"))
+  
+  pdf(file =filename ,width=size[1]+1,height=size[2]+2)
+  draw(ht_plt,ht_gap=unit(0.5,"mm"))
+  dev.off()
+  
+}
 
 
 
