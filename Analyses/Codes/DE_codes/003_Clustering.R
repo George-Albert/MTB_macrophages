@@ -606,9 +606,128 @@ for(i in vec){
   
 }
 
+write.table( cluster_out1, file.path(cluster_input_dir,"lfc_data_with_clusters_information.txt"))
+write.table( AIC_values, file.path(cluster_input_dir,"AIC_kmeans.txt"))
+write.table( BIC_values,file.path(cluster_input_dir,"BIC_kmeans.txt"))
+write.table( AIC_values_hckmeans,file.path(cluster_input_dir,"AIC_hckmeans.txt"))
+write.table( BIC_values_hckmeans,file.path(cluster_input_dir,"BIC_hckmeans.txt"))
 
 
+###############################################################################
+##  We selected k=16 from hckmeans. Now we plot AIC and BIC, and the trends  ##
+###############################################################################
 
+BIC_hckmeans_plt <- info_crit_plt(ic_df = ic_df[2:nrow(ic_df),],col_to_select = "BIC.Values.hckmeans",
+                                  ylab = "BIC_hckmeans_wo_1st_point",color = "blue",color_opt = "red" )
+cluster_selected_BIC_hckmeans <- BIC_hckmeans_plt[[2]]
+
+AIC_hckmeans_plt <- info_crit_plt(ic_df = ic_df[2:nrow(ic_df),],col_to_select = "AIC.Values.hckmeans",
+                                  ylab = "AIC_hckmeans_wo_1st_point",color = "blue",color_opt = "red" )
+cluster_selected_AIC_hckmeans <- AIC_hckmeans_plt[[2]]
+
+### plot the trends
+
+{
+  # Compute the mean and the sd by cluster
+  result_mean_list <- list() # list to save 
+  result_sd        <- list() # list to save the sd 
+  result_mean      <- list() # list to save the mean
+  
+  df <- cluster_out1[,c(1:4,10)] 
+  folder_to_save <- paste0("hckmeans_",colnames(df)[5])
+  df_por_clusters <- split(df, df[,5])
+  names(df_por_clusters) <- paste0("k=",names(df_por_clusters))
+  
+  # list to save plt to create a grid
+  plots_list <- list() 
+  
+  for (j in seq(df_por_clusters)) {
+    
+    result_mean_list[[j]] <- df_por_clusters[[j]][1:4] %>%
+      summarize(
+        Mean_beta_inf_2 = mean(beta_inf_2),
+        Mean_beta_inf_20 = mean(beta_inf_20),
+        Mean_beta_inf_48 = mean(beta_inf_48),
+        Mean_beta_inf_72 = mean(beta_inf_72),
+        sd_beta_inf_2 = sd(beta_inf_2),
+        sd_beta_inf_20 = sd(beta_inf_20),
+        sd_beta_inf_48 = sd(beta_inf_48),
+        sd_beta_inf_72 = sd(beta_inf_72)
+      )
+    
+    result_sd[[j]] <- result_mean_list[[j]][5:8]
+    result_mean[[j]] <- result_mean_list[[j]][1:4]
+    
+    data_mean <- pivot_longer(result_mean[[j]],cols = c(Mean_beta_inf_2,Mean_beta_inf_20,Mean_beta_inf_48,Mean_beta_inf_72),
+                              names_to = "Conditions",values_to = "Mean")
+    data_mean$Conditions <- factor(data_mean$Conditions,levels = c("Mean_beta_inf_2","Mean_beta_inf_20","Mean_beta_inf_48","Mean_beta_inf_72") )
+    
+    data_sd <- pivot_longer(result_sd[[j]],cols = c(sd_beta_inf_2,sd_beta_inf_20,sd_beta_inf_48,sd_beta_inf_72),
+                            names_to = "Conditions",values_to = "sd")
+    data_sd$Conditions <- factor(data_sd$Conditions,levels = c("sd_beta_inf_2","sd_beta_inf_20","sd_beta_inf_48","sd_beta_inf_72"))
+    
+    dataframe <- data.frame(data_mean,sd=data_sd$sd)
+    dataframe$x_num <- 1:nrow(dataframe)
+    
+    myarrow=arrow(angle = 15, ends = "last", type = "closed")
+    col <- c("red", "green", "blue","cyan")
+    # Define the line color and SD shading
+    line_color <- "black" # Change this value to the desired line color
+    ribbon_color <- "grey30" # Change this value to the desired shading color
+    
+    mean_plt_fun <- ggplot(data = dataframe, aes(x = x_num, y = Mean)) +
+      geom_line(aes(group = 1), color = line_color, arrow = myarrow, lwd = 2) +
+      geom_point(color = col, size = 4) +
+      geom_ribbon(aes(ymin = Mean - sd, ymax = Mean + sd), fill = ribbon_color, alpha = 0.2) +
+      scale_x_continuous(breaks = dataframe$x_num, labels = dataframe$Conditions) +
+      ylab("Mean") +
+      xlab("Conditions") +
+      ggtitle(paste0("k=",j)) +
+      theme_classic() +
+      theme(plot.title = element_text(size = 20, face = "bold", hjust = 0.5),
+            axis.text.y = element_text(size = 18),
+            axis.text.x = element_text(size = 18, angle = 90),
+            axis.title.y = element_text(size = 18),
+            axis.title.x = element_text(size = 18),
+            panel.background = element_blank(),
+            panel.grid.major = element_blank(),
+            panel.grid.minor = element_blank(),
+            axis.line = element_line(colour = "black"),
+            panel.border = element_rect(colour = "black", 
+                                        fill = NA, 
+                                        linewidth = 1, 
+                                        linetype = "solid"))
+    
+    # print(mean_plt_fun)
+    
+    # Save the plot in the list
+    plots_list[[paste0("k=", j)]] <- mean_plt_fun
+    
+    trend_dir <- file.path(cluster_dir,"Trends_per_cluster",folder_to_save)
+    dir.create(trend_dir,showWarnings = F,recursive = T)
+    
+    pdf(file.path(trend_dir,paste0("k=",j,"_plt.pdf")),width = 10,height = 10)
+    print(mean_plt_fun)
+    dev.off()
+    
+    # Calculate the number of plots
+    num_plots <- length(plots_list)
+    
+    # Calculate the number of columns and rows to automatically adjust the layout
+    ncol_plots <- ceiling(sqrt(num_plots))  # Square root approximation for plot distribution
+    nrow_plots <- ceiling(num_plots / ncol_plots)  # Adjust based on the number of columns
+    
+    pdf(file.path(trend_dir,"grid_plt.pdf"),width = 40,height = 38)
+    # Use do.call with grid.arrange to display the plots with the appropriate number of rows and columns
+    do.call(grid.arrange, c(plots_list, ncol = ncol_plots, nrow = nrow_plots))
+    dev.off()
+  }
+ 
+    
+    
+    
+  
+}
 
 
 
