@@ -125,29 +125,43 @@ length(which(paste0(cols$Individual,"_",cols$Setup)!=rownames(cols)))
     results=data.frame(results)
 
     write.table(results,file.path(output_dir,"003_DE_def","resultados.txt"))
-
-    # [1] "TimePoint20h 3454 hits."
-    # [1] "TimePoint48h 4021 hits."
-    # [1] "TimePoint72h 4283 hits."
-    # [1] "TimePoint02h:TreatmentTB 1467 hits."
-    # [1] "TimePoint20h:TreatmentTB 3577 hits."
-    # [1] "TimePoint48h:TreatmentTB 4096 hits."
-    # [1] "TimePoint72h:TreatmentTB 4426 hits."
-    # [1] "inf_2: 1467 hits"
-    # [1] "inf_20: 3577 hits"
-    # [1] "inf_48: 4096 hits"
-    # [1] "inf_72: 4426 hits"
-    # [1] "t_2_20_NI: 3454 hits"
-    # [1] "t_20_48_NI: 1538 hits"
-    # [1] "t_48_72_NI: 452 hits"
-    # [1] "t_2_20_TB: 3812 hits"
-    # [1] "t_20_48_TB: 1229 hits"
-    # [1] "t_48_72_TB: 681 hits"
-    # [1] "dinf_2_20_NI: 2753 hits"
-    # [1] "dinf_20_48_NI: 1114 hits"
-    # [1] "dinf_48_72_NI: 280 hits"
+    
+    x <- results
+    
+    grep("hit",colnames(x))
+    colnames(x)[grep("hit",colnames(x))]
+    
+    x <- x[,colnames(x)[grep("hit",colnames(x))]]
+    
+    DE.genes <- data.frame(colSums(x == 1, na.rm = TRUE))
+    colnames(DE.genes) <- "DE.Genes"
+    
+    DE_tab <- data.frame(Condition=rownames(DE.genes),DE.genes=DE.genes$DE.Genes)
+    write.table(DE_tab,file.path(output_dir,"003_DE_def","DE_table.txt"))
+    write.xlsx(DE_tab,file.path(output_dir,"003_DE_def","DE_table.xlsx"))
+    
+    # [1] "TimePoint20h 5422 hits."
+    # [1] "TimePoint48h 6320 hits."
+    # [1] "TimePoint72h 6712 hits."
+    # [1] "TimePoint02h:TreatmentTB 2271 hits."
+    # [1] "TimePoint20h:TreatmentTB 5575 hits."
+    # [1] "TimePoint48h:TreatmentTB 6355 hits."
+    # [1] "TimePoint72h:TreatmentTB 6887 hits."
+    # [1] "inf_2: 2271 hits"
+    # [1] "inf_20: 5575 hits"
+    # [1] "inf_48: 6355 hits"
+    # [1] "inf_72: 6887 hits"
+    # [1] "t_2_20_NI: 5422 hits"
+    # [1] "t_20_48_NI: 2459 hits"
+    # [1] "t_48_72_NI: 685 hits"
+    # [1] "t_2_20_TB: 5963 hits"
+    # [1] "t_20_48_TB: 1890 hits"
+    # [1] "t_48_72_TB: 1011 hits"
+    # [1] "dinf_2_20_NI: 4343 hits"
+    # [1] "dinf_20_48_NI: 1750 hits"
+    # [1] "dinf_48_72_NI: 409 hits"
    
-     ### Joaquin previous results
+     ### Joaquin previous results 
     #[1] "inf_2: 2270 hits"
     #[1] "inf_20: 5567 hits"
     #[1] "inf_48: 6378 hits"

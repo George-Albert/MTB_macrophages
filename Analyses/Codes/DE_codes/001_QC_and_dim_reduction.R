@@ -16,6 +16,7 @@
     library(cowplot)
     library(readr)
     library(Rtsne)
+    library(HGNChelper)
      
 }
 
@@ -24,9 +25,9 @@
 ##  Set labeling of samples  ##
 ###############################
 
-getwd()
 
-main_dir <- setwd()
+
+main_dir <- setwd(getwd())
 input_dir <- file.path("Analyses/Inputs")
 output_dir <- file.path("Analyses/Outputs")
 
@@ -1778,42 +1779,51 @@ output_dir <- file.path("Analyses/Outputs")
 {   #host="jul2018.archive.ensembl.org" Joaquin used this one
 
     library(biomaRt)
-    ensembl <- useMart(host="https://may2024.archive.ensembl.org", 
+    # host="https://may2024.archive.ensembl.org",
+    ensembl <- useMart( 
                        biomart="ENSEMBL_MART_ENSEMBL", 
                        dataset="hsapiens_gene_ensembl")
-    hugos <- getBM(attributes=c('hgnc_symbol', 'ensembl_gene_id','gene_biotype'),
-                   filters = 'ensembl_gene_id', values = rownames(reads), 
-                   mart = ensembl)
-
-    hugos=hugos[which(hugos$gene_biotype=="protein_coding"),]
-
-    length(which(hugos$hgnc_symbol==""))
-    ## 59 non-available gene names, I give them the ensembl ID also in the 
-    ## gene name column of the dictionary
-    ## Now there 25
+    # NCBI gene (formerly Entrezgene) accession(s) [e.g. A1BG]
+    # uniprot_gn_id
+    # entrezgene_accession
+    # hgnc_symbol
+    # "uniprot_gn_symbol"
     
+    filter_list <- listFilters(ensembl)
+    
+    hugos <- getBM(attributes=c("hgnc_symbol", "ensembl_gene_id","gene_biotype"),
+                   filters = "ensembl_gene_id", values = rownames(reads), 
+                   uniqueRows = TRUE, 
+                   mart = ensembl)
+    
+    hugos=hugos[which(hugos$gene_biotype=="protein_coding"),]
+    ### Check duplicates by ensemble id
+    length(which(duplicated(hugos$ensembl_gene_id)))
+    hugos <- hugos[!duplicated(hugos$ensembl_gene_id), ]
+    # duplicated_ensembl_gene_id <- hugos[duplicated(hugos$ensembl_gene_id),]
+    
+    length(which(hugos$hgnc_symbol==""))
+    ## 50 non-available gene names, I give them the ensembl ID also in the 
+    ## gene name column of the dictionary
+    entrez_wo_symbol <- hugos[which(hugos$hgnc_symbol==""),]
+    ## duplicated_symbol <- hugos[duplicated(hugos$hgnc_symbol),]
+    safe <- hugos
     hugos$hgnc_symbol[which(hugos$hgnc_symbol=="")]=hugos$ensembl_gene_id[which(hugos$hgnc_symbol=="")]
-
-    ### THere are no HUGO duplicated names.
+    
+    # Check the gene names
+    check_genes <- checkGeneSymbols(hugos$hgnc_symbol, unmapped.as.na = F, 
+                                    map = NULL, species = "human")
+    
+    length(which(check_genes$Approved==FALSE & !grepl("ENS",check_genes$x)))
+    genes_to_substitute <- check_genes[which(check_genes$Approved==FALSE & !grepl("ENS",check_genes$x)),]
+    
+    length(which(hugos$hgnc_symbol!=check_genes$x))
+    hugos$hgnc_symbol <- check_genes$Suggested.Symbol
+    
+    ### There are no HUGO duplicated names.
     length(which(duplicated(hugos$hgnc_symbol)))
     # 0
 
-    ### The only additional problem is one ENSEMBL ID mapping to 2 different HUGOS
-    ### now this is not happenning
-    hugos[which(duplicated(hugos$ensembl_gene_id)),]
-    #hgnc_symbol ensembl_gene_id   gene_biotype
-    #11433      CCL3L1 ENSG00000276085 protein_coding
-
-    #hugos[which(hugos$ensembl_gene_id=="ENSG00000276085"),]
-    #hgnc_symbol ensembl_gene_id   gene_biotype
-    #11432      CCL3L3 ENSG00000276085 protein_coding
-    #11433      CCL3L1 ENSG00000276085 protein_coding
-
-    ## Seeing this, I stick with CCL3L1
-
-    #hugos=hugos[-which(hugos$hgnc_symbol=="CCL3L3"),]
-
-    #### And that's it:
 
     dictionary=hugos[,1:2]
     dictionary=dictionary[order(dictionary$ensembl_gene_id),]
@@ -1993,7 +2003,7 @@ get_PCA_tris=function(setups,name,type="infection",shift1=1,shift2=1){
     for(i in 2:length(unique(cols_chunk$Individual)))
     exp_clean=exp_clean-model[,i]%*%t(design[,i])
     
-    ### FIrst process dirty
+    ### First process dirty
     
     corr_mat <- cor(exp_dirty,method="pearson")
     pca <-prcomp(corr_mat,scale=T)
