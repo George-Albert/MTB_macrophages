@@ -599,16 +599,16 @@ vector_of_names <- names(combined_list_by_trend)
 # }
 # 
 # 
-# ### 1st Configuration more permissive values
-# config_dir <- "1st_Configuration_by_stage"
-# 
-# {
-#   min_level <- 3
-#   max_level <- 8
-#   min_size  <- 10
-#   fdr       <- 0.01
-#   OR        <- 0.5
-# }
+### 1st Configuration more permissive values
+config_dir <- "1st_Configuration_by_stage"
+
+{
+  min_level <- 3
+  max_level <- 8
+  min_size  <- 10
+  fdr       <- 0.01
+  OR        <- 0.5
+}
 # 
 # ### 2nd Configuration
 # config_dir <- "2nd_Configuration_by_stage"

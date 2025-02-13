@@ -42,7 +42,9 @@ setwd(main_wd)
 input_folder     <- "Analyses/Inputs/005_Enrichment/GO_terms"
 output_dir       <- "Analyses/Outputs"
 enrichment_dir   <- file.path(output_dir,"005_Enrichment_GO")
-config_dir       <- "3rd_Configuration_by_stage"
+# config_dir       <- "3rd_Configuration_by_stage"
+# config_dir       <- "1st_Configuration_by_stage"
+config_dir       <- "2nd_Configuration_by_stage"
 dir_of_gene_list <- file.path(enrichment_dir,config_dir)
 
 #########################
@@ -87,6 +89,7 @@ list_enrichment_simplyfied <- lapply(names(list_enrichment), function(name) {
 
 ### keep the original names
 names(list_enrichment_simplyfied) <- names(list_enrichment)
+list_enrichment_simplyfied <- list_enrichment_simplyfied[match(level_index[,i], names(list_enrichment_simplyfied))]
 
 ### Stay with the union of the significative enrichments 
 filter_list <- function(x, th_qB=0.2, th_qOR=0.95,th_qp=0.05) {
@@ -114,7 +117,11 @@ lista_filtered <- Map(filter_list, list_enrichment_simplyfied)
 lista_filtered <- Filter(function(df) nrow(df) > 0, lista_filtered)
 lista_filtered <- lapply(lista_filtered, function(df) df[order(-df$OR), ])
 
-lista_filtered <- lista_filtered[match(level_index[,i], names(lista_filtered))]
+# lista_filtered <- lista_filtered[match(level_index[,i], names(lista_filtered))]
+
+terms_df <- data.frame(
+  my_column = unlist(lapply(lista_filtered, function(x) x$description))
+)
 
 tab <- lapply(lista_filtered, function(x) (sum(nrow(x))))
 total_sum <- sum(unlist(tab))
@@ -122,6 +129,7 @@ print(total_sum)
 
 ### join the dataframes by conditions
 union_of_df <- bind_rows(lista_filtered)
+length(which(union_of_df$description!=terms_df$my_column))
 row_order_index <- union_of_df[,c("description","Cluster")]
 row_order_index$Cluster <- factor(row_order_index$Cluster,levels = level_index[,i])
 row_order_index <- row_order_index[order(row_order_index$Cluster),]
