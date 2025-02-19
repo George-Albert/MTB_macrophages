@@ -1788,10 +1788,11 @@ output_dir <- file.path("Analyses/Outputs")
     # entrezgene_accession
     # hgnc_symbol
     # "uniprot_gn_symbol"
+    # entrezgene_id
     
-    filter_list <- listFilters(ensembl)
+    filter_list <- data.frame(listFilters(ensembl))
     
-    hugos <- getBM(attributes=c("hgnc_symbol", "ensembl_gene_id","gene_biotype"),
+    hugos <- getBM(attributes=c("hgnc_symbol","hgnc_id", "ensembl_gene_id","gene_biotype"),
                    filters = "ensembl_gene_id", values = rownames(reads), 
                    uniqueRows = TRUE, 
                    mart = ensembl)
@@ -1799,6 +1800,15 @@ output_dir <- file.path("Analyses/Outputs")
     hugos=hugos[which(hugos$gene_biotype=="protein_coding"),]
     ### Check duplicates by ensemble id
     length(which(duplicated(hugos$ensembl_gene_id)))
+    # duplicated_ensembl <- hugos[which(duplicated(hugos$ensembl_gene_id)),]
+    # duplicated_entrez_id <- hugos[which(duplicated(hugos$entrezgene_id)),]
+    # duplicated_hugo <- hugos[which(duplicated(hugos$hgnc_symbol)),]
+    duplicated_hugo_id <- hugos[which(duplicated(hugos$hgnc_symbol)),]
+    
+    ### SAve duplicated data
+    # write.xlsx(duplicated_ensembl,file.path(input_dir,"002_Processed","Duplicated_genes_ensembl.xlsx"))
+    # write.table(duplicated_ensembl,file.path(input_dir,"002_Processed","Duplicated_genes_ensembl.txt"))
+    # 
     hugos <- hugos[!duplicated(hugos$ensembl_gene_id), ]
     # duplicated_ensembl_gene_id <- hugos[duplicated(hugos$ensembl_gene_id),]
     
@@ -1824,7 +1834,9 @@ output_dir <- file.path("Analyses/Outputs")
     length(which(duplicated(hugos$hgnc_symbol)))
     # 0
 
-
+    write.xlsx(hugos,file.path(input_dir,"002_Processed","hugo_sheme_annotation.xlsx"))
+    write.table(hugos,file.path(input_dir,"002_Processed","hugo_sheme_annotation.txt"))
+    # 
     dictionary=hugos[,1:2]
     dictionary=dictionary[order(dictionary$ensembl_gene_id),]
 

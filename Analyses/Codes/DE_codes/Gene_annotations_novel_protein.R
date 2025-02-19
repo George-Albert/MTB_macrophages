@@ -35,3 +35,30 @@ gene_annotations <- getBM(
 print(gene_annotations)
 gene_annotations <- data.frame(gene_annotations)
 write.table(gene_annotations,file.path(input_dir,"002_Processed","genotype_matrix_building_files","novel_proteins_wo_gene_name.txt"))
+
+list_marts     <- listMarts()
+ensembl        <- useMart("ENSEMBL_MART_ENSEMBL")
+list_dataset   <- listDatasets(ensembl)
+dataset_to_use <- "hsapiens_gene_ensembl"
+
+# ensembl <- useMart(biomart="ENSEMBL_MART_ENSEMBL", dataset = dataset_to_use)
+
+ensembl <- useDataset(dataset =  dataset_to_use, mart = ensembl)
+gene_symbols <- rownames(reads)  # Cambia esto por tus propios genes
+
+# Obtener los Ensembl IDs correspondientes
+conversion <- getBM(attributes = c('hgnc_symbol', 'ensembl_gene_id'),
+                    filters = 'hgnc_symbol',
+                    values = gene_symbols,
+                    mart = ensembl)
+
+# Ver los resultados de la conversión
+print(conversion)
+GOs <- getBM(attributes=c('ensembl_gene_id', 'go_id', 'name_1006', 
+                          'go_linkage_type', 'namespace_1003'), 
+             filters = 'ensembl_gene_id', 
+             values = conversion$ensembl_gene_id, 
+             mart = ensembl)
+unique(GOs$go_linkage_type)
+length(which(GOs$go_linkage_type=="IEA"))
+length(unique(GOs$go_id))

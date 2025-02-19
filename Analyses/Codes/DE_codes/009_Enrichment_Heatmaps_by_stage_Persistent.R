@@ -42,9 +42,9 @@ setwd(main_wd)
 input_folder     <- "Analyses/Inputs/005_Enrichment/GO_terms"
 output_dir       <- "Analyses/Outputs"
 enrichment_dir   <- file.path(output_dir,"005_Enrichment_GO")
-# config_dir       <- "1st_Configuration_by_stage"
+config_dir       <- "1st_Configuration_by_stage"
 # config_dir       <- "2nd_Configuration_by_stage"
-config_dir       <- "3rd_Configuration_by_stage"
+# config_dir       <- "3rd_Configuration_by_stage"
 
 dir_of_gene_list <- file.path(enrichment_dir,config_dir)
 

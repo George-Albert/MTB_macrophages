@@ -599,37 +599,37 @@ vector_of_names <- names(combined_list_by_trend)
 # }
 # 
 # 
-### 1st Configuration more permissive values
-config_dir <- "1st_Configuration_by_stage"
-
-{
-  min_level <- 3
-  max_level <- 8
-  min_size  <- 10
-  fdr       <- 0.01
-  OR        <- 0.5
-}
-# 
-# ### 2nd Configuration
-# config_dir <- "2nd_Configuration_by_stage"
+## 1st Configuration more permissive values
+# config_dir <- "1st_Configuration_by_stage"
 # 
 # {
-#   min_level <- 1
+#   min_level <- 3
 #   max_level <- 8
-#   min_size  <- 5
+#   min_size  <- 10
 #   fdr       <- 0.01
 #   OR        <- 0.5
 # }
+# 
+### 2nd Configuration
+config_dir <- "2nd_Configuration_by_stage"
 
-### 3rd Configuration
-config_dir <- "3rd_Configuration_by_stage"
 {
-  min_level <- 3
+  min_level <- 1
   max_level <- 8
   min_size  <- 5
   fdr       <- 0.01
   OR        <- 0.5
 }
+
+### 3rd Configuration
+# config_dir <- "3rd_Configuration_by_stage"
+# {
+#   min_level <- 3
+#   max_level <- 8
+#   min_size  <- 5
+#   fdr       <- 0.01
+#   OR        <- 0.5
+# }
 
 for (i in vec_to_loop) {
   
