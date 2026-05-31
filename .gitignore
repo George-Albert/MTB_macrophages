@@ -1,0 +1,24 @@
+# OS and editor artifacts
+.DS_Store
+Thumbs.db
+
+# R session/history artifacts
+.Rhistory
+.RData
+.Rproj.user/
+
+# Existing trash/legacy folders to keep out of version control
+Codes/Trash_Codes/
+Codes/EQTL_mapping/Trash_eqtl_codes/
+Outputs/trash/
+Outputs/old_folders/
+
+# Data and generated outputs (large artifacts; keep local, not in git)
+Inputs/
+Outputs/
+*.zip
+
+# Generic temporary files
+*.tmp
+*.temp
+*~
