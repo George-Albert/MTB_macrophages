@@ -3,6 +3,16 @@
 Analysis repository for time-resolved host response to *Mycobacterium tuberculosis*
 infection in human macrophages.
 
+## Table of Contents
+
+- [Scientific Context](#scientific-context)
+- [Current Analysis Scope](#current-analysis-scope)
+- [Repository Structure](#repository-structure)
+- [Workflow Overview](#workflow-overview)
+- [Reproducible Execution](#reproducible-execution)
+- [Data Policy](#data-policy)
+- [Refactor Status](#refactor-status)
+
 ## Scientific Context
 
 This project supports a doctoral research line focused on developing
