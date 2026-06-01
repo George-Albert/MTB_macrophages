@@ -7,6 +7,7 @@
   - `Inputs/` and `Outputs/`
   - `Analyses/Inputs/` and `Analyses/Outputs/` (legacy compatibility)
 - Package preflight script at `scripts/preflight_packages.R`.
+- Parse validation script at `scripts/validate_r_parse.R`.
 - Pipeline execution order documented in `config/pipeline_order.yml`.
 
 ## Traceability Controls

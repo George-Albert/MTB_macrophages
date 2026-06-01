@@ -23,7 +23,7 @@ technical issues observed during repository hardening.
 
 | Script | Current role | Review status |
 | --- | --- | --- |
-| `Codes/EQTL_mapping/001_Setting_exp_data.R` | Builds individual-level TB-minus-NI response matrices across time and joins cluster labels. | Bootstrap started; one remaining clustering path still uses legacy `Analyses/Inputs`. |
+| `Codes/EQTL_mapping/001_Setting_exp_data.R` | Builds individual-level TB-minus-NI response matrices across time and joins cluster labels. | Bootstrap started; analytical logic preserved. |
 | `Codes/EQTL_mapping/002_Fitting_Hill_eq.R` | Fits nonlinear Hill-type curves to temporal response profiles by gene, individual, and cluster. | Bootstrap started; currently appears configured to run only the gradual-up cluster set. |
 | `Codes/EQTL_mapping/003_Plot_Hill_fits_wo_constrains.R` | Plots Hill fits without constraints. | Needs shared bootstrap. |
 | `Codes/EQTL_mapping/004_Inspect_R2_negative.R` | Inspects fits with negative R-squared values. | Needs shared bootstrap. |
@@ -46,3 +46,5 @@ technical issues observed during repository hardening.
 - All tracked non-trash R scripts should parse before PR. A syntax-only repair was
   needed in `bmrs.R` and `brms_1.R` after global parsing detected a duplicated
   displaced block.
+- Use `scripts/validate_r_parse.R` as the lightweight validation gate before
+  future commits or PRs.
