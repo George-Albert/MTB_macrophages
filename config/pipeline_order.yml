@@ -1,0 +1,26 @@
+workflow:
+  differential_expression:
+    - Codes/DE_codes/001_QC_and_dim_reduction.R
+    - Codes/DE_codes/002_Differential_expression.R
+    - Codes/DE_codes/003_Clustering.R
+    - Codes/DE_codes/004_Clustering_2.R
+    - Codes/DE_codes/005_1Setting_data_annotation.R
+    - Codes/DE_codes/005_Boolean_matrix_building.R
+    - Codes/DE_codes/006_Metadata_matrix_builder.R
+    - Codes/DE_codes/007_Significant_responses_over_ time.R
+    - Codes/DE_codes/008_Enrichment_Analysis_by_cluster.R
+    - Codes/DE_codes/009_Enrichment_Heatmaps_by_stage.R
+    - Codes/DE_codes/010_cor_pvalues_GO.R
+  eqtl_mapping:
+    - Codes/EQTL_mapping/001_Setting_exp_data.R
+    - Codes/EQTL_mapping/002_Fitting_Hill_eq.R
+    - Codes/EQTL_mapping/003_Plot_Hill_fits_wo_constrains.R
+    - Codes/EQTL_mapping/004_Inspect_R2_negative.R
+    - Codes/EQTL_mapping/005_Test_filtering_options_2.R
+    - Codes/EQTL_mapping/006_Random_inspection_w_constrains.R
+    - Codes/EQTL_mapping/008_Correlation_parameters.R
+    - Codes/EQTL_mapping/009_R2_min_Ind.R
+
+notes:
+  - Keep Trash_* folders excluded from tracked workflow.
+  - Inputs/ and Outputs/ are local-only artifacts by policy.

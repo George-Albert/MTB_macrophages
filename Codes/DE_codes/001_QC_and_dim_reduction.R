@@ -3,23 +3,32 @@
 ##  Load Dependencies  ##
 #########################
 
- { library(tidyverse)
-   library(ggplot2)
-   library(ggrepel)
-   library(limma)
-   library(edgeR)
-   library(qvalue)
-   library(rtracklayer)
-   library(RColorBrewer)
-   library(reshape2)
-   library(cowplot)
-   library(readr)
-   library(Rtsne)
-   library(HGNChelper)
-   library(ggnewscale)
-   library(xlsx)
-   library(biomaRt)
-   }
+bootstrap_root <- normalizePath(getwd(), winslash = "/", mustWork = FALSE)
+repeat {
+  setup_candidate <- file.path(bootstrap_root, "Codes", "_shared", "project_setup.R")
+  if (file.exists(setup_candidate)) {
+    source(setup_candidate)
+    break
+  }
+  parent <- dirname(bootstrap_root)
+  if (identical(parent, bootstrap_root)) {
+    stop("Could not locate Codes/_shared/project_setup.R")
+  }
+  bootstrap_root <- parent
+}
+
+project_root <- find_project_root()
+setwd(project_root)
+input_dir <- resolve_inputs_dir(project_root)
+outputs_root <- resolve_outputs_dir(project_root)
+
+# Centralized dependency loading improves maintainability and preflight checks.
+required_packages <- c(
+  "tidyverse", "ggplot2", "ggrepel", "limma", "edgeR", "qvalue",
+  "rtracklayer", "RColorBrewer", "reshape2", "cowplot", "readr", "Rtsne",
+  "HGNChelper", "ggnewscale", "xlsx", "biomaRt"
+)
+load_required_packages(required_packages)
 
 
 ##############
@@ -32,10 +41,8 @@
   ##  Set the labeling of the data  ##
   ####################################
   
-  main_dir   <- setwd(getwd())
-  input_dir  <- file.path("Analyses/Inputs")
   script_id  <- "001_QC_and_dim_reduction"
-  output_dir <- file.path("Analyses/Outputs",script_id)
+  output_dir <- file.path(outputs_root, script_id)
   data_to_plot_dir <- file.path(output_dir,"002_Data_to_plot")
   
   dir.create(data_to_plot_dir,recursive = T,showWarnings = F)
@@ -61,14 +68,12 @@
   rownames(reads)=reads[,1]
   reads=reads[,2:ncol(reads)]
   
-  ##########################################################################
-  ##                 Hay algunas samples con el SampleID                  ##
-  ##                   duplicado en la tabla de metadatos,                 ##
-  ##  en las colnames de reads se diferencian con un .1. Asumo que esto  ##
-  ##                 no es problema para saber cuál de las                ##
-  ##    columnas se corresponde a un duplicado porque están en el mismo   ##
-  ##               orden en data (columnas) y metadata (rows)             ##
-  ##########################################################################
+  ##############################################################################
+  ## Some samples have duplicated SampleID values in metadata.                ##
+  ## In the reads matrix those duplicates are disambiguated with a '.1'       ##
+  ## suffix. The script assumes metadata rows and read columns remain aligned  ##
+  ## in order, so duplicates can be consistently remapped.                     ##
+  ##############################################################################
   
   set_differ=which(cols$SampleID!=colnames(reads))
   cols$SampleID=as.character(cols$SampleID)
@@ -78,10 +83,10 @@
   cols$Duplicated[which(cols$SampleID %in% dupes)]=1
   cols$Duplicated[which(cols$SampleID!=colnames(reads))]=2
   
-  #######################################################################
-  ##       Así que añado a mano los .1 también en los metadatos,       ##
-  ##   en una nueva columna (que almacenará los sampleIDs corregidos.  ##
-  #######################################################################
+  ########################################################################
+  ## Mirror the '.1' suffix convention in metadata using a corrected      ##
+  ## sample column so metadata and count matrix identifiers stay aligned. ##
+  ########################################################################
   
   cols$Sample=cols$SampleID
   cols$Sample[set_differ]=paste0(cols$SampleID[set_differ],".1")

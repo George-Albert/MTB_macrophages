@@ -1,0 +1,10 @@
+# Normalize text files for cross-platform collaboration.
+* text=auto
+
+# Keep analysis and documentation files stable across Windows/macOS/Linux.
+*.R text eol=lf
+*.Rmd text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.txt text eol=lf
