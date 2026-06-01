@@ -6,7 +6,7 @@
 {
   library(tidyverse)
   library(ggplot2)
-  library(xlsx)
+  library(openxlsx)
   library(ggpubr)
   library(shiny)
 }

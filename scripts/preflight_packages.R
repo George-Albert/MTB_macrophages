@@ -18,7 +18,7 @@ setwd(project_root)
 required_packages <- c(
   "tidyverse", "ggplot2", "ggrepel", "limma", "edgeR", "qvalue",
   "cowplot", "openxlsx", "ngram", "RColorBrewer", "dendextend",
-  "reshape2", "xlsx", "minpack.lm", "broom", "patchwork", "ggforce",
+  "reshape2", "readxl", "minpack.lm", "broom", "patchwork", "ggforce",
   "ggpubr", "shiny", "brms", "bayesplot", "cmdstanr", "Rtsne",
   "HGNChelper", "ggnewscale", "biomaRt", "rtracklayer", "tidyr",
   "dplyr", "gridExtra", "ggthemes", "ggdendro", "dendsort", "umap",

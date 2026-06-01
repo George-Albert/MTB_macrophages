@@ -6,7 +6,7 @@
 {
   library(tidyverse)
   library(ggplot2)
-  library(xlsx)
+  library(openxlsx)
   library(broom)
   library(patchwork)
   library(ggpubr)
@@ -167,7 +167,6 @@ for (g in id_gene) {
     units  = "in"
   )
 }
-
 
 
 

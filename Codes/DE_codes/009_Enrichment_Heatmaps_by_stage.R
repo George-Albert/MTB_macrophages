@@ -5,7 +5,7 @@
   library(tidyverse)
   library(qvalue)
   library(igraph)
-  library(xlsx)
+  library(openxlsx)
   library(ComplexHeatmap)
   library(RColorBrewer)
   library(circlize)
@@ -356,4 +356,3 @@
   
   
 }
-

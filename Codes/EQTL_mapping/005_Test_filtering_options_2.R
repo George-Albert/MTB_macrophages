@@ -5,7 +5,7 @@
 {
   library(tidyverse)
   library(ggplot2)
-  library(xlsx)
+  library(openxlsx)
   library(broom)
   library(patchwork)
   library(ggpubr)
@@ -303,17 +303,3 @@ for (i in vec) {
 # Save the final list
 saveRDS(final_list,
         file.path(eqtl_input_dir,"Summary_list","Final_summary_filtering_test.rds"))
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-    

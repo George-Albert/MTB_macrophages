@@ -3,11 +3,28 @@
 ####################
 ##  Dependencies  ##
 ####################
-{
-  library(tidyverse)
-  library(ggpubr)  # for stat_cor
-  library(xlsx)
+
+bootstrap_root <- normalizePath(getwd(), winslash = "/", mustWork = FALSE)
+repeat {
+  setup_candidate <- file.path(bootstrap_root, "Codes", "_shared", "project_setup.R")
+  if (file.exists(setup_candidate)) {
+    source(setup_candidate)
+    break
   }
+  parent <- dirname(bootstrap_root)
+  if (identical(parent, bootstrap_root)) {
+    stop("Could not locate Codes/_shared/project_setup.R")
+  }
+  bootstrap_root <- parent
+}
+
+project_root <- find_project_root()
+setwd(project_root)
+input_dir <- resolve_inputs_dir(project_root)
+outputs_root <- resolve_outputs_dir(project_root)
+
+required_packages <- c("tidyverse", "ggpubr", "openxlsx", "readxl")
+load_required_packages(required_packages)
 
 #################
 ##  Functions  ##
@@ -15,19 +32,27 @@
 
 dcols <- function(df){data.frame(colnames(df))} 
 
+read_excel_table <- function(path, sheet = 1) {
+  extension <- tolower(tools::file_ext(path))
+  if (identical(extension, "xls")) {
+    return(as.data.frame(readxl::read_excel(path, sheet = sheet)))
+  }
+
+  openxlsx::read.xlsx(path, sheet = sheet)
+}
+
 #################
 ##  Load Data  ##
 #################
 
 script_id  <- "010_cor_pvalues_GO.R"
-output_dir <- file.path("Analyses/Outputs",script_id)
-input_dir  <- "Analyses/Inputs"
+output_dir <- file.path(outputs_root, script_id)
 
 # Load the files from ClueGO
-clue_GO_dir      <- "Analyses/Outputs/006_clueGO"
-clueGO_tab_early <- read.xlsx(file.path(clue_GO_dir,"Early.Up-1.xls"),sheetIndex = 1)
-clueGO_tab_mid   <- read.xlsx(file.path(clue_GO_dir,"Mid.Up-1.xls"),sheetIndex = 1)
-clueGO_tab_late  <- read.xlsx(file.path(clue_GO_dir,"Late.Up-1.xls"),sheetIndex = 1)
+clue_GO_dir      <- file.path(outputs_root, "006_clueGO")
+clueGO_tab_early <- read_excel_table(file.path(clue_GO_dir,"Early.Up-1.xls"), sheet = 1)
+clueGO_tab_mid   <- read_excel_table(file.path(clue_GO_dir,"Mid.Up-1.xls"), sheet = 1)
+clueGO_tab_late  <- read_excel_table(file.path(clue_GO_dir,"Late.Up-1.xls"), sheet = 1)
 
 clueGO_list <- list(clueGO_tab_early=clueGO_tab_early,clueGO_tab_mid=clueGO_tab_mid,
                     clueGO_tab_late=clueGO_tab_late)
@@ -35,13 +60,13 @@ clueGO_list <- list(clueGO_tab_early=clueGO_tab_early,clueGO_tab_mid=clueGO_tab_
 ### We selected the 1st configuration 
 config_dir         <- "1st_Configuration_by_stage"
 previous_script_id <- "008_Enrichment_Analysis_by_cluster"
-output_dir_prev    <- file.path("Analyses","Outputs",previous_script_id)
+output_dir_prev    <- file.path(outputs_root, previous_script_id)
 
 # Load the files from our results
 my_GO_dir   <- file.path(output_dir_prev,"005_Enrichment_GO",config_dir)
-early_up_1  <- read.xlsx(file.path(my_GO_dir,"Early.Up","Enrichment_GO_Early.Up.xlsx"),sheetIndex = 1)
-mid_up_1    <- read.xlsx(file.path(my_GO_dir,"Mid.Up","Enrichment_GO_Mid.Up.xlsx"),sheetIndex = 1)
-late_up_1   <- read.xlsx(file.path(my_GO_dir,"Late.Up","Enrichment_GO_Late.Up.xlsx"),sheetIndex = 1)
+early_up_1  <- read_excel_table(file.path(my_GO_dir,"Early.Up","Enrichment_GO_Early.Up.xlsx"), sheet = 1)
+mid_up_1    <- read_excel_table(file.path(my_GO_dir,"Mid.Up","Enrichment_GO_Mid.Up.xlsx"), sheet = 1)
+late_up_1   <- read_excel_table(file.path(my_GO_dir,"Late.Up","Enrichment_GO_Late.Up.xlsx"), sheet = 1)
 
 colnames_vec <- c("GO_ID","description","OR","p","fdr","genes_in_query")
 
@@ -112,4 +137,3 @@ for (i in vec) {
   
 
 }
-

@@ -26,7 +26,7 @@ outputs_root <- resolve_outputs_dir(project_root)
 required_packages <- c(
   "tidyverse", "ggplot2", "ggrepel", "limma", "edgeR", "qvalue",
   "rtracklayer", "RColorBrewer", "reshape2", "cowplot", "readr", "Rtsne",
-  "HGNChelper", "ggnewscale", "xlsx", "biomaRt"
+  "HGNChelper", "ggnewscale", "openxlsx", "biomaRt"
 )
 load_required_packages(required_packages)
 
@@ -1628,7 +1628,7 @@ load_required_packages(required_packages)
     res <- topTable(fit2,adjust="BH",n=nrow(reads))
     res$adj.P.Val=p.adjust(res$P.Value)
     print(length(which(res$adj.P.Val<0.01)))
-    write.xlsx(res, file.path(dir,paste0("contrast_", contrast_name, ".xlsx")), row.names = TRUE)
+    write.xlsx(res, file.path(dir,paste0("contrast_", contrast_name, ".xlsx")), rowNames = TRUE)
     
     return(res)
   }
@@ -2479,7 +2479,6 @@ load_required_packages(required_packages)
   
   write.table(tsne_clean[[2]],file.path(tsne_dir,"tsne_data.txt"))
 }
-
 
 
 

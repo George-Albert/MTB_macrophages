@@ -6,7 +6,7 @@
   library(dplyr)
   library(babelgene)
   library(HGNChelper)
-  library(xlsx)
+  library(openxlsx)
   library(org.Hs.eg.db)
 }
 
@@ -232,5 +232,4 @@ molecular_functions  <- read.delim(file.path(GO_data_dir,"001_GO_table_to_list",
   
   
 }
-
 

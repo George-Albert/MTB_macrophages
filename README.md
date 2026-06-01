@@ -89,14 +89,14 @@ source("scripts/preflight_packages.R")
 
 Check that every tracked R script is syntactically valid:
 
-```r
-source("scripts/validate_r_parse.R")
+```sh
+Rscript scripts/validate_r_parse.R
 ```
 
-On this machine, `Rscript` was found at:
+If `Rscript` is not on `PATH` in Windows, locate it with:
 
-```text
-C:/Users/JorgeAlbertoCardenas/AppData/Local/Programs/R/R-4.6.0/bin/Rscript.exe
+```powershell
+where.exe Rscript
 ```
 
 ## Data Policy

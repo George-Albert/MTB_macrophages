@@ -10,7 +10,7 @@
   library(dplyr)
   library(babelgene)
   library(HGNChelper)
-  library(xlsx)
+  library(openxlsx)
 }
 
 
@@ -162,7 +162,6 @@ dir.create(file.path(GO_data_dir,"003_Boolean_matrices"),showWarnings = F)
 saveRDS(GO_gene_term_matrix_bp, file=file.path(GO_data_dir,"003_Boolean_matrices/boolean_matrix_bp.RDS"))
 saveRDS(GO_gene_term_matrix_cc, file=file.path(GO_data_dir,"003_Boolean_matrices/boolean_matrix_cc.RDS"))
 saveRDS(GO_gene_term_matrix_mf, file=file.path(GO_data_dir,"003_Boolean_matrices/boolean_matrix_mf.RDS"))
-
 
 
 

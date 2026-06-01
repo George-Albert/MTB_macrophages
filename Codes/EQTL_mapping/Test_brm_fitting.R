@@ -6,7 +6,7 @@
   library(tidyverse)
   library(ggplot2)
   library(brms)
-  library(xlsx)
+  library(openxlsx)
   library(ggpubr)
   library(bayesplot)
   library(cmdstanr)

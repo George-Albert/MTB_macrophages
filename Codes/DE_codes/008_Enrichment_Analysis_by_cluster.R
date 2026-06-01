@@ -12,7 +12,7 @@
   library(RColorBrewer)
   library(qvalue)
   library(igraph)
-  library(xlsx)
+  library(openxlsx)
   library(circlize)
   library(ggsci)
 }
@@ -553,7 +553,7 @@
   )
   
   write.table(df_counts,file.path(input_dir,"002_Processed","genes_per_cluster.txt"))
-  write.xlsx(df_counts,file.path(input_dir,"002_Processed","genes_per_cluster.xlsx"),row.names = F)
+  write.xlsx(df_counts,file.path(input_dir,"002_Processed","genes_per_cluster.xlsx"),rowNames = FALSE)
   
   ### Lets create clusters attending to the trend they have
   ### k= 1,4,7 Graduall Down     
@@ -762,7 +762,6 @@
 #                                 label_indexes=label_indexes_RNA_up,#numeric vector name i want in Gephi
 #                                 output_file="Outputs/GO_enrichments/gephi_networks/RNA_up")
 #And this way you can write your gephi network
-
 
 
 

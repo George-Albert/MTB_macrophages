@@ -24,7 +24,7 @@ outputs_root <- resolve_outputs_dir(project_root)
 # Standardized package loading keeps execution reproducible across environments.
 required_packages <- c(
   "tidyverse", "ggplot2", "ggrepel", "limma", "edgeR", "qvalue", "cowplot",
-  "stats", "openxlsx", "ngram", "RColorBrewer", "dendextend", "reshape2", "xlsx"
+  "stats", "openxlsx", "ngram", "RColorBrewer", "dendextend", "reshape2"
 )
 load_required_packages(required_packages)
 
@@ -355,6 +355,5 @@ cols_whole= read.table(file.path(input_dir,"002_Processed","whole","metadata_who
   
   
 }
-
 
 

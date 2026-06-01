@@ -7,7 +7,7 @@
 {
   library(tidyverse)
   library(ggplot2)
-  library(xlsx)
+  library(openxlsx)
   library(ggpubr)
   library(shiny)
 }
@@ -152,7 +152,6 @@ dir.create(r2_th_dir, recursive = TRUE, showWarnings = FALSE)
 pdf(file = file.path(r2_th_dir, "genes_vs_r2_threshold_and_min_individuals.pdf"), width = 8, height = 6)
 print(plt)
 dev.off()
-
 
 
 
