@@ -6,6 +6,13 @@ Thumbs.db
 .Rhistory
 .RData
 .Rproj.user/
+.Renviron
+.Rprofile
+
+# Local credentials and environment files
+.env
+.env.*
+!.env.example
 
 # Existing trash/legacy folders to keep out of version control
 Codes/Trash_Codes/

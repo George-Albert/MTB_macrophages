@@ -87,6 +87,12 @@ Run package preflight before executing analysis scripts:
 source("scripts/preflight_packages.R")
 ```
 
+Check that every tracked R script is syntactically valid:
+
+```r
+source("scripts/validate_r_parse.R")
+```
+
 On this machine, `Rscript` was found at:
 
 ```text

@@ -4,8 +4,8 @@
 
 1. Path assumptions still present in many scripts.
    - Most scripts still expect specific relative directories and rely on the current working directory.
-   - Mitigation started by introducing `Codes/_shared/project_setup.R` and updating three critical scripts.
-   - Remaining high-impact candidates: `003_Clustering.R`, `004_Clustering_2.R`, `005_1Setting_data_annotation.R`, `008_Enrichment_Analysis_by_cluster.R`, and EQTL scripts `002_` through `009_`.
+   - Mitigation started by introducing `Codes/_shared/project_setup.R` and updating five critical scripts.
+   - Remaining high-impact candidates: `004_Clustering_2.R`, `005_1Setting_data_annotation.R`, `008_Enrichment_Analysis_by_cluster.R`, and EQTL scripts `003_` through `009_`.
 
 2. Monolithic scripts with mixed responsibilities.
    - Several files combine data preparation, analysis, and plotting in one script.
@@ -47,5 +47,7 @@
   - `docs/refactor_roadmap.md`
 - Added script inventory:
   - `docs/script_inventory.md`
+- Added tracked-R parse validation:
+  - `scripts/validate_r_parse.R`
 - Expanded README scientific context from the local doctoral research plan while
   keeping the planning PDF excluded from git.
