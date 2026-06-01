@@ -2,33 +2,38 @@
 ## 0.Load Dependencies ##
 #########################
 
-{
-  library(tidyverse)
-  library(ggplot2)
-  library(ggrepel)
-  library(limma)
-  library(edgeR)
-  library(qvalue)
-  library(cowplot)
-  library(stats)
-  library(openxlsx)
-  library(ngram)
-  #library(rtracklayer)
-  library(RColorBrewer)
-  library(dendextend)
-  library(reshape2)
-  library(xlsx)
+bootstrap_root <- normalizePath(getwd(), winslash = "/", mustWork = FALSE)
+repeat {
+  setup_candidate <- file.path(bootstrap_root, "Codes", "_shared", "project_setup.R")
+  if (file.exists(setup_candidate)) {
+    source(setup_candidate)
+    break
+  }
+  parent <- dirname(bootstrap_root)
+  if (identical(parent, bootstrap_root)) {
+    stop("Could not locate Codes/_shared/project_setup.R")
+  }
+  bootstrap_root <- parent
 }
+
+project_root <- find_project_root()
+setwd(project_root)
+input_dir <- resolve_inputs_dir(project_root)
+outputs_root <- resolve_outputs_dir(project_root)
+
+# Standardized package loading keeps execution reproducible across environments.
+required_packages <- c(
+  "tidyverse", "ggplot2", "ggrepel", "limma", "edgeR", "qvalue", "cowplot",
+  "stats", "openxlsx", "ngram", "RColorBrewer", "dendextend", "reshape2", "xlsx"
+)
+load_required_packages(required_packages)
 
 
 #######################
 ##  Set directories  ##
 #######################
-main_dir <- getwd()
-setwd(main_dir)
 script_id <- "001_Setting_exp_data"
-input_dir  <- "Analyses/Inputs"
-output_dir <- file.path("Analyses/Outputs",script_id)
+output_dir <- file.path(outputs_root, script_id)
 
 
 ########################
@@ -57,8 +62,8 @@ cols_whole= read.table(file.path(input_dir,"002_Processed","whole","metadata_who
   length(which(sort(unique(df$Individuo)) != sort(total_number_of_individuals)))
   # 102 Individuals in the raw metadata
   
-  # The result table is in the output folder 002_Differential_expression
-  DE_out_dir <- file.path("Analyses/Outputs/002_Differential_expression")
+  # Differential expression outputs are produced by script 002_Differential_expression.
+  DE_out_dir <- file.path(outputs_root, "002_Differential_expression")
   results <- read.table(file.path(DE_out_dir,"003_DE_def","resultados.txt"))
   DE_tab  <- read.table(file.path(DE_out_dir,"003_DE_def","DE_table.txt"))
   
@@ -322,7 +327,7 @@ cols_whole= read.table(file.path(input_dir,"002_Processed","whole","metadata_who
   delta_expr_df <- do.call(rbind, all_individuals_data)
   
   # Load lfc with clustering information
-  cluster_input_dir <- file.path("Analyses","Inputs","003_Clustering_tabs")
+  cluster_input_dir <- file.path(input_dir, "003_Clustering_tabs")
   cluster_out <- read.table(file.path(cluster_input_dir,"lfc_data_with_clusters_information.txt"))
   
   # We selected the k=16 cluster results
@@ -353,13 +358,3 @@ cols_whole= read.table(file.path(input_dir,"002_Processed","whole","metadata_who
 
 
 
-
-
-
-
-
-
-
-
-
- 

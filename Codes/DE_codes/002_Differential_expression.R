@@ -2,27 +2,36 @@
 ## 0.Load Dependencies ##
 #########################
 
-{library(tidyverse)
-    library(ggplot2)
-    library(ggrepel)
-    library(limma)
-    library(edgeR)
-    library(qvalue)
-    library(cowplot)
-    library(stats)
-    library(openxlsx)
-    library(ngram)
-    #library(rtracklayer)
-    library(RColorBrewer)
-    library(dendextend)
-    library(reshape2)}
-    
-### Set dir
-main_dir <- getwd()
-setwd(main_dir)
-input_dir  <- "Analyses/Inputs"
+bootstrap_root <- normalizePath(getwd(), winslash = "/", mustWork = FALSE)
+repeat {
+    setup_candidate <- file.path(bootstrap_root, "Codes", "_shared", "project_setup.R")
+    if (file.exists(setup_candidate)) {
+        source(setup_candidate)
+        break
+    }
+    parent <- dirname(bootstrap_root)
+    if (identical(parent, bootstrap_root)) {
+        stop("Could not locate Codes/_shared/project_setup.R")
+    }
+    bootstrap_root <- parent
+}
+
+project_root <- find_project_root()
+setwd(project_root)
+input_dir <- resolve_inputs_dir(project_root)
+outputs_root <- resolve_outputs_dir(project_root)
+
+# Keep dependency handling explicit and validated through shared utilities.
+required_packages <- c(
+    "tidyverse", "ggplot2", "ggrepel", "limma", "edgeR", "qvalue",
+    "cowplot", "stats", "openxlsx", "ngram", "RColorBrewer", "dendextend",
+    "reshape2"
+)
+load_required_packages(required_packages)
+
+### Configure project-relative paths
 script_id  <- "002_Differential_expression"
-output_dir <- file.path("Analyses/Outputs",script_id)
+output_dir <- file.path(outputs_root, script_id)
 data_to_plot_dir <- file.path(output_dir,"002_Data_to_plot")
 
 dir.create(data_to_plot_dir,recursive = T,showWarnings = F)
@@ -178,4 +187,3 @@ length(which(paste0(cols$Individual,"_",cols$Setup)!=rownames(cols)))
     #[1] "dinf_20_48_NI: 1758 hits"
     #[1] "dinf_48_72_NI: 411 hits"
 }
-

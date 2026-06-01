@@ -22,3 +22,6 @@ Outputs/
 *.tmp
 *.temp
 *~
+
+# Local personal planning files
+Plan_investigacion_*.pdf

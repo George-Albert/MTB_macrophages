@@ -530,51 +530,6 @@ write.table(divergences_table,
 write.csv(divergences_table, 
           file.path(eqtl_input_dir, "002_bmrs_divergences.csv"), 
           row.names = FALSE)
-  
-  
-  
-  
-  
-  
-  
-  
-  
-
-  posterior_summary(fit, variable = c("b_Amp_Intercept", "b_Tao_Intercept", "b_h_Intercept"))
-  
-  # Impute the missing data
-  df_na <- df_gene %>% filter(is.na(Expression))
-  if (nrow(df_na) > 0) {
-    imputed_samples <- posterior_predict(fit, newdata = df_na)
-    df_na$Expression_imputed <- colMeans(imputed_samples)
-  } else {
-    df_na <- NULL
-  }
-  
-  # Extract the fitted values
-  ind_coefs <- coef(fit)$Individuo
-  coefs <- data.frame(
-    Gene= gene_id,
-    Individuo = rownames(ind_coefs),
-    Amp    = ind_coefs[, "Estimate", "Amp_Intercept"],
-    Amp_sd = ind_coefs[, "Est.Error", "Amp_Intercept"],
-    Tao    = ind_coefs[, "Estimate", "Tao_Intercept"],
-    Tao_sd = ind_coefs[, "Est.Error", "Tao_Intercept"],
-    h      = ind_coefs[, "Estimate", "h_Intercept"],
-    h_sd   = ind_coefs[, "Est.Error", "h_Intercept"]
-    
-  )
-  
-  # Save the results
-  results_by_gene[[gene_id]] <- list(
-    model   = fit,
-    imputed = df_na,
-    coefs   = coefs
-    )
-}
-
-
-
 
 df_gene_id <- df_cluster %>%
   filter(Gene == gene_id) %>%
@@ -685,4 +640,3 @@ for (g in id_gene) {
 # --- GUARDAR ESTADISTICAS ---
 fit_stats_df <- bind_rows(fit_stats)
 write.csv(fit_stats_df, file = file.path(hill_out_dir, "fit_stats_by_individual.csv"), row.names = FALSE)
-
