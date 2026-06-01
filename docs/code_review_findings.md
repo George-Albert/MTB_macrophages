@@ -36,7 +36,9 @@
 - Refactored headers/path bootstrap for:
   - `Codes/DE_codes/001_QC_and_dim_reduction.R`
   - `Codes/DE_codes/002_Differential_expression.R`
+  - `Codes/DE_codes/003_Clustering.R`
   - `Codes/EQTL_mapping/001_Setting_exp_data.R`
+  - `Codes/EQTL_mapping/002_Fitting_Hill_eq.R`
 - Added professional repo docs and workflow metadata:
   - `README.md`
   - `config/pipeline_order.yml`

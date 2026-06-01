@@ -9,7 +9,7 @@ technical issues observed during repository hardening.
 | --- | --- | --- |
 | `Codes/DE_codes/001_QC_and_dim_reduction.R` | QC, sample/metadata alignment, PCA/t-SNE, processed expression outputs for downstream analyses. | Bootstrap started; still long and monolithic. |
 | `Codes/DE_codes/002_Differential_expression.R` | `edgeR`/`limma` differential expression across infection and time contrasts. | Bootstrap started; analytical logic preserved. |
-| `Codes/DE_codes/003_Clustering.R` | Selects infection-responsive genes, normalizes temporal logFC profiles, estimates k-means/hierarchical k-means clusters, writes clustering intermediates. | Needs shared bootstrap; contains reusable plotting/clustering helpers that could move to `_shared`. |
+| `Codes/DE_codes/003_Clustering.R` | Selects infection-responsive genes, normalizes temporal logFC profiles, estimates k-means/hierarchical k-means clusters, writes clustering intermediates. | Bootstrap started; contains reusable plotting/clustering helpers that could move to `_shared`. |
 | `Codes/DE_codes/004_Clustering_2.R` | Downstream inspection and visualization of selected cluster assignments. | Needs shared bootstrap. |
 | `Codes/DE_codes/005_1Setting_data_annotation.R` | Builds GO annotation lists from ClueGO/GO tables and maps identifiers. | Needs shared bootstrap; writes generated annotation intermediates. |
 | `Codes/DE_codes/005_Boolean_matrix_building.R` | Builds GO boolean matrices. | Needs shared bootstrap. |
@@ -24,7 +24,7 @@ technical issues observed during repository hardening.
 | Script | Current role | Review status |
 | --- | --- | --- |
 | `Codes/EQTL_mapping/001_Setting_exp_data.R` | Builds individual-level TB-minus-NI response matrices across time and joins cluster labels. | Bootstrap started; one remaining clustering path still uses legacy `Analyses/Inputs`. |
-| `Codes/EQTL_mapping/002_Fitting_Hill_eq.R` | Fits nonlinear Hill-type curves to temporal response profiles by gene, individual, and cluster. | Needs shared bootstrap; currently appears configured to run only the gradual-up cluster set. |
+| `Codes/EQTL_mapping/002_Fitting_Hill_eq.R` | Fits nonlinear Hill-type curves to temporal response profiles by gene, individual, and cluster. | Bootstrap started; currently appears configured to run only the gradual-up cluster set. |
 | `Codes/EQTL_mapping/003_Plot_Hill_fits_wo_constrains.R` | Plots Hill fits without constraints. | Needs shared bootstrap. |
 | `Codes/EQTL_mapping/004_Inspect_R2_negative.R` | Inspects fits with negative R-squared values. | Needs shared bootstrap. |
 | `Codes/EQTL_mapping/005_Test_filtering_options_2.R` | Tests filtering thresholds over Hill-fit quality metrics and individual coverage. | Needs shared bootstrap. |

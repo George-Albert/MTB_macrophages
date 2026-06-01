@@ -2,19 +2,31 @@
 ## 0.Load Dependencies ##
 #########################
 
-{
-  library(tidyverse)
-  library(ggplot2)
-  library(minpack.lm)
-  library(broom)
+bootstrap_root <- normalizePath(getwd(), winslash = "/", mustWork = FALSE)
+repeat {
+  setup_candidate <- file.path(bootstrap_root, "Codes", "_shared", "project_setup.R")
+  if (file.exists(setup_candidate)) {
+    source(setup_candidate)
+    break
+  }
+  parent <- dirname(bootstrap_root)
+  if (identical(parent, bootstrap_root)) {
+    stop("Could not locate Codes/_shared/project_setup.R")
+  }
+  bootstrap_root <- parent
 }
 
-### Set dir
-main_dir <- getwd()
-setwd(main_dir)
+paths <- bootstrap_project()
+project_root <- paths$project_root
+input_dir <- paths$input_dir
+outputs_root <- paths$outputs_root
+
+required_packages <- c("tidyverse", "ggplot2", "minpack.lm", "broom")
+load_required_packages(required_packages)
+
+### Configure project-relative paths
 script_id      <- "002_Fitting_Hill_eq"
-input_dir      <- "Analyses/Inputs"
-output_dir     <- file.path("Analyses/Outputs",script_id)
+output_dir     <- file.path(outputs_root, script_id)
 eqtl_input_dir <- file.path(input_dir,"006_EQTL_data")
 
 dir.create(output_dir,recursive = T,showWarnings = F)
@@ -248,4 +260,3 @@ system.time({
   }
   
 })
-
