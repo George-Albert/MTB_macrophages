@@ -31,7 +31,7 @@ technical issues observed during repository hardening.
 | `Codes/EQTL_mapping/006_Random_inspection_w_constrains.R` | Inspects constrained fits and parameter distributions. | Needs shared bootstrap. |
 | `Codes/EQTL_mapping/008_Correlation_parameters.R` | Correlates Hill model parameters and prepares selected parameter groups. | Needs shared bootstrap. |
 | `Codes/EQTL_mapping/009_R2_min_Ind.R` | Evaluates R2 and minimum-individual thresholds. | Needs shared bootstrap. |
-| `Codes/EQTL_mapping/bmrs.R`, `brms_1.R`, `Test_brm_fitting.R`, `Plot_output_bmrs.R` | Bayesian/nonlinear model exploration and plotting. | Should be classified as active workflow or moved to exploratory/archive in a separate commit. |
+| `Codes/EQTL_mapping/bmrs.R`, `brms_1.R`, `Test_brm_fitting.R`, `Plot_output_bmrs.R` | Active exploratory Bayesian/nonlinear model development and plotting. | Keep tracked as active exploratory work; needs shared bootstrap and clearer run notes. |
 | `Codes/EQTL_mapping/Raul_code/run.01.matrixeQTL.R` | External/legacy Matrix eQTL-oriented workflow. | Keep documented separately unless it becomes part of the active pipeline. |
 
 ## Cross-Cutting Technical Notes
@@ -43,3 +43,6 @@ technical issues observed during repository hardening.
   output writing. Function extraction should happen only after path migration.
 - The first safe refactor pass should change script headers/path setup only,
   without changing statistical models or thresholds.
+- All tracked non-trash R scripts should parse before PR. A syntax-only repair was
+  needed in `bmrs.R` and `brms_1.R` after global parsing detected a duplicated
+  displaced block.

@@ -15,7 +15,7 @@ The repository is in a transition from local exploratory analysis scripts toward
    Scripts still use hard-coded `Analyses/Inputs` and `Analyses/Outputs` paths. Each active script should source the shared setup helper and resolve paths from the project root.
 
 2. Active workflow and exploratory code are mixed.
-   Files such as `bmrs.R`, `brms_1.R`, `Test_brm_fitting.R`, and `Plot_output_bmrs.R` appear exploratory or model-development oriented. They should either be documented as active workflow steps or moved to an `archive/` or `exploratory/` area in a separate commit.
+   Files such as `bmrs.R`, `brms_1.R`, `Test_brm_fitting.R`, and `Plot_output_bmrs.R` are active exploratory model-development scripts. Keep them tracked, but document expected inputs, outputs, and run status separately from the stable pipeline.
 
 3. Several scripts write derived artifacts into input folders.
    This is useful for step-to-step handoff, but it blurs raw input versus generated intermediate data. Consider splitting `Inputs/` into raw/external inputs and `Outputs/` or `intermediate/` for generated pipeline handoffs.
@@ -34,8 +34,8 @@ The repository is in a transition from local exploratory analysis scripts toward
 3. Bootstrap the remaining active workflow scripts.
    Refactor only headers/path setup first, without changing analytical logic.
 
-4. Classify exploratory code.
-   Move or document experimental Bayesian/eQTL scripts after confirming which are part of the intended final workflow.
+4. Document active exploratory code.
+   Add run notes for Bayesian/eQTL model-development scripts, including which scripts are exploratory, which outputs they expect, and which parameters are intentionally experimental.
 
 5. Extract repeated functions.
    Move reusable plotting, clustering, GO, and Hill-fitting helpers into shared modules only after all scripts run with project-relative paths.
